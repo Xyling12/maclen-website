@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Спасибо! — Питомник Maclen</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .thanks-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--green-bg);
+      text-align: center;
+      padding: 2rem;
+    }
+    .thanks-card {
+      background: white;
+      border-radius: var(--radius);
+      padding: 4rem 3rem;
+      max-width: 520px;
+      box-shadow: var(--shadow-md);
+    }
+    .thanks-icon { font-size: 4rem; margin-bottom: 1.5rem; }
+    .thanks-card h1 { color: var(--green-dark); margin-bottom: 1rem; font-size: 2rem; }
+    .thanks-card p { color: var(--text-muted); margin-bottom: 2rem; line-height: 1.7; }
+    .thanks-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="thanks-page">
+    <div class="thanks-card">
+      <div class="thanks-icon">🐾</div>
+      <h1 class="display">Заявка получена!</h1>
+      <p>Спасибо, <strong>${name}</strong>! Елена свяжется с вами в течение нескольких часов и расскажет о доступных котятах.<br><br>Пока можете посмотреть нашу жизнь в ВКонтакте 🐱</p>
+      <div class="thanks-actions">
+        <a href="../index.html" class="btn btn-primary">← На главную</a>
+        <a href="https://vk.com/maclen" target="_blank" class="btn btn-outline">ВКонтакте</a>
+        <a href="https://wa.me/79127570136" class="btn btn-whatsapp">💬 WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
