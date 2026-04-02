@@ -1,0 +1,8 @@
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    environment:
+      - VK_GROUP_TOKEN=${VK_GROUP_TOKEN}
+    ports:
+      - "80:80"
