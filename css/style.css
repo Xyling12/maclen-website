@@ -1390,3 +1390,119 @@ footer {
     transition-duration: .01ms !important;
   }
 }
+
+/* ============================================
+   KITTEN MODAL
+   ============================================ */
+.kitten-modal {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.kitten-modal.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.kitten-modal__overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+.kitten-modal__content {
+  position: relative;
+  background: var(--white);
+  border-radius: var(--radius);
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  transform: translateY(20px) scale(0.95);
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+.kitten-modal.active .kitten-modal__content {
+  transform: translateY(0) scale(1);
+}
+@media (max-width: 768px) {
+  .kitten-modal__content {
+    grid-template-columns: 1fr;
+  }
+}
+.kitten-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: var(--cream);
+  color: var(--text);
+  border-radius: 50%;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.kitten-modal__close:hover {
+  background: var(--sand);
+}
+.kitten-modal__left {
+  background: #f0f0f0;
+  display: flex;
+  flex-direction: column;
+}
+.kitten-modal__main-img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+.kitten-modal__thumbs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+}
+.kitten-modal__thumbs img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border 0.2s;
+}
+.kitten-modal__thumbs img.active {
+  border-color: var(--green);
+}
+.kitten-modal__right {
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.kitten-modal__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.kitten-modal__desc {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+  max-height: 30vh;
+  overflow-y: auto;
+}

@@ -219,8 +219,9 @@ const FALLBACK_KITTENS = [
   { name: 'Эклипс', details: 'Кот · 5 месяцев', status: 'free', img: '/images/cat5.webp', vkUrl: 'https://vk.com/maclen' },
 ];
 
-function renderKittenCard(k) {
-  const waText = encodeURIComponent(`Здравствуйте! Интересует котёнок ${k.name}. Расскажите подробнее.`);
+let globalKittensData = [];
+
+function renderKittenCard(k, i) {
   const statusLabel = k.status === 'free' ? 'Свободен' : 'Забронирован';
   const statusClass = k.status === 'free' ? 'free' : 'reserved';
   return `
@@ -235,10 +236,10 @@ function renderKittenCard(k) {
         <div class="kitten-card__name display">${k.name}</div>
         <div class="kitten-card__details">${k.details}</div>
         <div class="kitten-card__actions">
-          <a href="https://wa.me/79127570136?text=${waText}" target="_blank" class="btn btn-primary">
+          <button onclick="openKittenModal(${i})" class="btn btn-primary">
             Узнать подробности
-          </a>
-          <a href="${k.vkUrl}" target="_blank" class="btn btn-outline">В ВК →</a>
+          </button>
+          <a href="#contacts" onclick="document.getElementById('wishes').value = 'Интересует котенок: ${encodeURIComponent(k.name)}'" class="btn btn-outline">Оставить заявку</a>
         </div>
       </div>
     </div>`;
@@ -255,26 +256,82 @@ async function loadKittens() {
     const data = await res.json();
     
     if (data && data.items && data.items.length) {
-      kittens = data.items.map(item => ({
-        name: item.title,
-        price: item.price?.text || 'Уточните цену',
-        details: item.description ? truncate(item.description, 60) : 'Мейн-кун',
-        status: item.availability === 0 ? 'free' : 'reserved',
-        img: item.thumb_photo || '/images/cat_placeholder.jpg',
-        vkUrl: item.market_url || `https://vk.com/maclen`
-      }));
+      kittens = data.items.map(item => {
+        let photos = [item.thumb_photo];
+        if (item.photos && item.photos.length > 0) {
+           photos = item.photos.map(p => getBestPhoto(p.sizes) || item.thumb_photo);
+        }
+        
+        return {
+          name: item.title,
+          price: item.price?.text || 'Уточните цену',
+          details: item.description ? truncate(item.description, 60) : 'Мейн-кун',
+          longDesc: item.description || 'Нет подробного описания',
+          status: item.availability === 0 ? 'free' : 'reserved',
+          img: item.thumb_photo || '/images/cat_placeholder.jpg',
+          photos: photos,
+          vkUrl: item.market_url || `https://vk.com/maclen`
+        };
+      });
     }
   } catch (err) {
     console.warn('Failed to load market items:', err);
   }
 
-  if (!kittens) kittens = FALLBACK_KITTENS;
+  if (!kittens) kittens = FALLBACK_KITTENS.map(k => ({...k, photos: [k.img], longDesc: k.details, price: 'По запросу'}));
+  
+  globalKittensData = kittens;
 
-  grid.innerHTML = kittens.map(renderKittenCard).join('');
+  grid.innerHTML = kittens.map((k, i) => renderKittenCard(k, i)).join('');
   grid.querySelectorAll('.kitten-card').forEach(el => {
     el.classList.add('fade-up');
     observer.observe(el);
   });
+}
+
+function openKittenModal(index) {
+  const k = globalKittensData[index];
+  if (!k) return;
+
+  document.getElementById('kModalName').innerText = k.name;
+  document.getElementById('kModalPrice').innerText = k.price;
+  document.getElementById('kModalStatus').innerText = k.status === 'free' ? 'Свободен' : 'Забронирован';
+  document.getElementById('kModalStatus').style.color = k.status === 'free' ? 'var(--green)' : 'var(--text-muted)';
+  document.getElementById('kModalDesc').innerText = k.longDesc;
+  document.getElementById('kModalMainImg').src = k.photos[0];
+
+  const thumbsContainer = document.getElementById('kModalThumbs');
+  thumbsContainer.innerHTML = '';
+  
+  k.photos.forEach((src, idx) => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.loading = 'lazy';
+    if (idx === 0) img.classList.add('active');
+    img.onclick = () => {
+      document.getElementById('kModalMainImg').src = src;
+      thumbsContainer.querySelectorAll('img').forEach(i => i.classList.remove('active'));
+      img.classList.add('active');
+    };
+    thumbsContainer.appendChild(img);
+  });
+
+  const modal = document.getElementById('kittenModal');
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeKittenModal() {
+  document.getElementById('kittenModal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function bookFromModal() {
+  closeKittenModal();
+  const name = document.getElementById('kModalName').innerText;
+  const wishesField = document.getElementById('wishes');
+  if(wishesField) wishesField.value = 'Интересует котенок: ' + name;
+  window.location.hash = '#contacts';
 }
 
 // ============================================================

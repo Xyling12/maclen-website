@@ -283,10 +283,38 @@
     </div>
     <div class="kittens__cta fade-up">
       <p style="color:var(--text-muted);margin-bottom:1rem">Нет подходящего? Спросите о планируемых пометах</p>
-      <a href="https://wa.me/79127570136?text=Здравствуйте!%20Расскажите%20о%20доступных%20котятах." target="_blank" class="btn btn-whatsapp">💬 Спросить в WhatsApp</a>
+      <a href="https://vk.me/maclen" target="_blank" class="btn btn-primary" style="background:#0077FF;border-color:#0077FF;">
+        <span style="font-size:1.2rem;margin-bottom:2px">💙</span> Написать в сообщество
+      </a>
     </div>
   </div>
 </section>
+
+<!-- ====================================================
+     KITTEN MODAL
+==================================================== -->
+<div class="kitten-modal" id="kittenModal">
+  <div class="kitten-modal__overlay" onclick="closeKittenModal()"></div>
+  <div class="kitten-modal__content">
+    <button class="kitten-modal__close" onclick="closeKittenModal()">×</button>
+    <div class="kitten-modal__left">
+      <img src="" id="kModalMainImg" class="kitten-modal__main-img" alt="Фото котенка мейн-кун">
+      <div class="kitten-modal__thumbs" id="kModalThumbs"></div>
+    </div>
+    <div class="kitten-modal__right">
+      <div class="kitten-modal__info">
+        <h3 class="display" id="kModalName" style="font-size:2rem;margin-bottom:0">Имя</h3>
+        <div style="color:var(--green);font-weight:600;font-size:1.2rem" id="kModalPrice">Цена</div>
+        <div class="eyebrow" id="kModalStatus" style="margin-top:0.5rem">Свободен</div>
+      </div>
+      <div class="kitten-modal__desc" id="kModalDesc">Описание</div>
+      
+      <div style="margin-top:auto; display:flex; gap:1rem;">
+        <button class="btn btn-primary" onclick="bookFromModal()" style="width:100%;justify-content:center">Оставить заявку</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ====================================================
      PARENTS
