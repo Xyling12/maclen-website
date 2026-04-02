@@ -1,16 +1,20 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Serve static files from the current directory
+app.use(express.static(__dirname));
+
 const VK_TOKEN = process.env.VK_GROUP_TOKEN;
-const VK_USER_ID = '694180609'; // Elena's ID
+const VK_USER_ID = '23912024'; // Maxim's ID temporarily
 const VK_API_V = '5.131';
 
-app.post('/submit', async (req, res) => {
+app.post('/api/submit', async (req, res) => {
   try {
     const { name, phone, city, extraInfo } = req.body;
     
@@ -55,7 +59,12 @@ app.post('/submit', async (req, res) => {
   }
 });
 
-const PORT = 3000;
+// Fallback for SPA routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+const PORT = 80;
 app.listen(PORT, () => {
-  console.log(`Maclen API server running on port ${PORT}`);
+  console.log(`Maclen server running on port ${PORT}`);
 });

@@ -1,7 +1,7 @@
 {
-  "name": "maclen-api",
+  "name": "maclen-website",
   "version": "1.0.0",
-  "description": "API for Maclen Cattery",
+  "description": "Maclen Website",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
