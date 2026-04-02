@@ -358,13 +358,37 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================================
-// FORM: confirmation toast
+// FORM: API submission
 // ============================================================
-document.getElementById('leadForm')?.addEventListener('submit', function(e) {
+document.getElementById('leadForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
   const btn = this.querySelector('.form-submit');
+  const originalText = btn.textContent;
   btn.textContent = 'Отправляем…';
   btn.disabled = true;
-  // FormSubmit handles redirect to thanks.html
+
+  try {
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+      btn.textContent = 'Заявка отправлена! ✨';
+      btn.classList.add('success');
+      this.reset();
+    } else {
+      throw new Error('Server error');
+    }
+  } catch (err) {
+    btn.textContent = 'Ошибка. Попробуйте позже';
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = originalText; }, 3000);
+  }
 });
 
 })();
