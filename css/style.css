@@ -58,7 +58,7 @@ h3 { font-size: clamp(1.1rem, 2vw, 1.5rem); }
   color: var(--green);
 }
 .section-title { margin-bottom: .5rem; }
-.section-subtitle { color: var(--text-muted); max-width: 560px; }
+.section-subtitle { color: var(--text-muted); max-width: 560px; margin: 0 auto; }
 .section-header { margin-bottom: 3rem; text-align: center; }
 .section-header .eyebrow { margin-bottom: .5rem; }
 
