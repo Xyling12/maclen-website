@@ -1,0 +1,5 @@
+.git
+.github
+.vercel
+*.md
+node_modules
