@@ -204,9 +204,9 @@ async function vkCall(method, params = {}) {
 // KITTENS — VK Market
 // ============================================================
 const FALLBACK_KITTENS = [
-  { name: 'Глория', price: '50 000 ₽', details: 'Кошка · Окрас g09 · Рождена 05.11.2025', status: 'free', img: '/images/cat2.png', vkUrl: 'https://vk.com/market/product/gloria-225204095-14442146' },
-  { name: 'Энцо', price: 'Уточните цену', details: 'Кот · Окрас n 22 · 5 месяцев', status: 'free', img: '/images/cat3.png', vkUrl: 'https://vk.com/maclen' },
-  { name: 'Эклипс', price: 'Уточните цену', details: 'Кот · 5 месяцев', status: 'free', img: '/images/cat5.png', vkUrl: 'https://vk.com/maclen' },
+  { name: 'Глория', details: 'Кошка · Окрас g09 · Рождена 05.11.2025', status: 'free', img: '/images/cat2.png', vkUrl: 'https://vk.com/market/product/gloria-225204095-14442146' },
+  { name: 'Энцо', details: 'Кот · Окрас n 22 · 5 месяцев', status: 'free', img: '/images/cat3.png', vkUrl: 'https://vk.com/maclen' },
+  { name: 'Эклипс', details: 'Кот · 5 месяцев', status: 'free', img: '/images/cat5.png', vkUrl: 'https://vk.com/maclen' },
 ];
 
 function renderKittenCard(k) {
@@ -224,10 +224,9 @@ function renderKittenCard(k) {
       <div class="kitten-card__body">
         <div class="kitten-card__name display">${k.name}</div>
         <div class="kitten-card__details">${k.details}</div>
-        <div class="kitten-card__price">${k.price}</div>
         <div class="kitten-card__actions">
           <a href="https://wa.me/79127570136?text=${waText}" target="_blank" class="btn btn-primary">
-            💬 WhatsApp
+            Узнать подробности
           </a>
           <a href="${k.vkUrl}" target="_blank" class="btn btn-outline">В ВК →</a>
         </div>
