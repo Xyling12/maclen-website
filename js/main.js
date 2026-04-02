@@ -289,7 +289,7 @@ function renderBlogCard(post) {
       <div class="blog-card__img">
         ${hasImg
           ? `<img src="${post.img}" alt="Новости питомника Maclen мейн-кун Ижевск"
-                  onerror="this.parentElement.innerHTML='<span class=\\"blog-card__img-placeholder\\">🐾</span>';this.onerror=null"
+                  onerror="this.parentElement.innerHTML='<span class=&quot;blog-card__img-placeholder&quot;>🐾</span>';this.onerror=null"
                   loading="lazy">`
           : '<span class="blog-card__img-placeholder">🐾</span>'
         }
