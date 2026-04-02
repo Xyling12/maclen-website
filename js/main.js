@@ -250,30 +250,28 @@ async function loadKittens() {
 
   let kittens = null;
 
-  if (VK_TOKEN) {
-    const res = await vkCall('market.get', {
-      owner_id: VK_OWNER_ID_GROUP,
-      count: 9,
-      extended: 1,
-    });
-    if (res && res.items && res.items.length) {
-      kittens = res.items.map(item => ({
+  try {
+    const res = await fetch('/api/market');
+    const data = await res.json();
+    
+    if (data && data.items && data.items.length) {
+      kittens = data.items.map(item => ({
         name: item.title,
         price: item.price?.text || 'Уточните цену',
-        details: stripEmoji(item.description).slice(0, 80) || 'Мейн-кун · питомник Maclen',
+        details: item.description ? truncate(item.description, 60) : 'Мейн-кун',
         status: item.availability === 0 ? 'free' : 'reserved',
-        img: getBestPhoto(item.photos?.[0]?.sizes) || '',
-        vkUrl: `https://vk.com/market/product/${Math.abs(VK_OWNER_ID_GROUP)}-${item.id}`,
+        img: item.thumb_photo || '/images/cat_placeholder.jpg',
+        vkUrl: item.market_url || `https://vk.com/maclen`
       }));
     }
+  } catch (err) {
+    console.warn('Failed to load market items:', err);
   }
 
   if (!kittens) kittens = FALLBACK_KITTENS;
 
   grid.innerHTML = kittens.map(renderKittenCard).join('');
-  // Re-observe new elements for fade-in
-  grid.querySelectorAll('.kitten-card').forEach((el, i) => {
-    el.style.animationDelay = `${i * 0.1}s`;
+  grid.querySelectorAll('.kitten-card').forEach(el => {
     el.classList.add('fade-up');
     observer.observe(el);
   });
