@@ -23,7 +23,7 @@ app.post('/api/submit', async (req, res) => {
       return res.status(500).json({ error: 'Server misconfiguration' });
     }
 
-    const messageText = `🐾 Новая заявка с сайта Maclen.ru!\n\nИмя: ${name || '—'}\nТелефон: ${phone || '—'}\nГород: ${city || '—'}\nКомментарий: ${extraInfo || '—'}`;
+    const messageText = `🐾 Новая заявка с сайта Maclencat.ru!\n\nИмя: ${name || '—'}\nТелефон: ${phone || '—'}\nГород: ${city || '—'}\nКомментарий: ${extraInfo || '—'}`;
 
     const randomId = Math.floor(Math.random() * 2000000000);
 
