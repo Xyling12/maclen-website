@@ -391,18 +391,62 @@ window.openKittenModal = function(index) {
   const thumbsContainer = document.getElementById('kModalThumbs');
   thumbsContainer.innerHTML = '';
   
+  if (k.videoIframeUrl) {
+    const vThumbWrapper = document.createElement('div');
+    vThumbWrapper.style.position = 'relative';
+    vThumbWrapper.style.cursor = 'pointer';
+    vThumbWrapper.style.width = '60px'; // Matching CSS thumb width roughly
+    vThumbWrapper.style.height = '60px';
+    
+    const vImg = document.createElement('img');
+    vImg.src = k.photos[0]; // Use first photo as video thumbnail background
+    vImg.style.width = '100%';
+    vImg.style.height = '100%';
+    vImg.style.objectFit = 'cover';
+    vImg.style.borderRadius = '6px';
+    vImg.classList.add('active'); // active by default if video present
+    
+    // Play overlay icon
+    const playIcon = document.createElement('div');
+    playIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>`;
+    playIcon.style.position = 'absolute';
+    playIcon.style.top = '50%';
+    playIcon.style.left = '50%';
+    playIcon.style.transform = 'translate(-50%, -50%)';
+    playIcon.style.background = 'rgba(0,0,0,0.5)';
+    playIcon.style.borderRadius = '50%';
+    playIcon.style.padding = '8px';
+    playIcon.style.display = 'flex';
+    playIcon.style.pointerEvents = 'none';
+
+    vThumbWrapper.appendChild(vImg);
+    vThumbWrapper.appendChild(playIcon);
+    
+    vThumbWrapper.onclick = () => {
+       document.getElementById('kModalMainImg').style.display = 'none';
+       document.getElementById('kModalVideoFrame').style.display = 'block';
+       document.getElementById('kModalVideoFrame').src = k.videoIframeUrl;
+       
+       thumbsContainer.querySelectorAll('img').forEach(i => i.classList.remove('active'));
+       vImg.classList.add('active');
+    };
+    thumbsContainer.appendChild(vThumbWrapper);
+  }
+
   k.photos.forEach((src, idx) => {
     const img = document.createElement('img');
     img.src = src;
     img.loading = 'lazy';
     if (idx === 0 && !k.videoIframeUrl) img.classList.add('active');
+    
     img.onclick = () => {
       if (document.getElementById('kModalVideoFrame')) {
           document.getElementById('kModalVideoFrame').style.display = 'none';
-          document.getElementById('kModalVideoFrame').src = '';
+          document.getElementById('kModalVideoFrame').src = ''; // stop audio
       }
       document.getElementById('kModalMainImg').style.display = 'block';
       document.getElementById('kModalMainImg').src = src;
+      
       thumbsContainer.querySelectorAll('img').forEach(i => i.classList.remove('active'));
       img.classList.add('active');
     };
