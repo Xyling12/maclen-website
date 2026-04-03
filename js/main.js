@@ -210,6 +210,22 @@ async function vkCall(method, params = {}) {
   }
 }
 
+// ====================================================
+// VK VIDEO MODAL
+// ====================================================
+window.openVideoModal = function(ownerId, videoId) {
+  const container = document.getElementById('videoModalContainer');
+  container.innerHTML = `<iframe src="https://vk.com/video_ext.php?oid=${ownerId}&id=${videoId}&hd=2" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
+  document.getElementById('videoModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeVideoModal = function() {
+  document.getElementById('videoModal').classList.remove('active');
+  document.getElementById('videoModalContainer').innerHTML = '';
+  document.body.style.overflow = '';
+};
+
 // ============================================================
 // KITTENS — VK Market
 // ============================================================
@@ -363,8 +379,12 @@ function renderBlogCard(post) {
   const cleanText = stripEmoji(post.text || '');
   const linkText = post.isVideo ? 'Смотреть видео в ВКонтакте →' : 'Читать в ВКонтакте →';
   
+  const linkAction = post.isVideo 
+    ? `onclick="openVideoModal('${post.videoOwnerId}', '${post.videoId}'); return false;"` 
+    : '';
+
   const imgContent = hasImg
-    ? `<a href="${post.url}" target="_blank" style="display: block; position: relative; width: 100%; height: 100%; text-decoration: none;">
+    ? `<a href="${post.url}" target="_blank" ${linkAction} style="display: block; position: relative; width: 100%; height: 100%; text-decoration: none;">
          <img src="${post.img}" alt="Новости питомника Maclen мейн-кун Ижевск"
               onerror="this.parentElement.innerHTML='<span class=&quot;blog-card__img-placeholder&quot;>🐾</span>';this.onerror=null"
               loading="lazy" style="width:100%;height:100%;object-fit:cover;">
@@ -401,6 +421,8 @@ async function loadBlog() {
         .map(p => {
           let photoUrl = null;
           let isVideo = false;
+          let videoOwnerId = null;
+          let videoId = null;
           if (p.attachments) {
             const photoAtt = p.attachments.find(a => a.type === 'photo');
             if (photoAtt && photoAtt.photo && photoAtt.photo.sizes) {
@@ -411,6 +433,8 @@ async function loadBlog() {
               if (videoAtt && videoAtt.video && videoAtt.video.image) {
                 photoUrl = videoAtt.video.image[videoAtt.video.image.length - 1].url;
                 isVideo = true;
+                videoOwnerId = videoAtt.video.owner_id;
+                videoId = videoAtt.video.id;
               }
             }
           }
@@ -419,6 +443,8 @@ async function loadBlog() {
             text: p.text || '',
             img: photoUrl,
             isVideo: isVideo,
+            videoOwnerId: videoOwnerId,
+            videoId: videoId,
             url: `https://vk.com/maclen?w=wall-225204095_${p.id}`,
           };
         });
