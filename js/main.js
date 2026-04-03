@@ -361,20 +361,26 @@ const FALLBACK_POSTS = [
 function renderBlogCard(post) {
   const hasImg = post.img && post.img.length > 0;
   const cleanText = stripEmoji(post.text || '');
+  const linkText = post.isVideo ? 'Смотреть видео в ВКонтакте →' : 'Читать в ВКонтакте →';
+  
+  const imgContent = hasImg
+    ? `<a href="${post.url}" target="_blank" style="display: block; position: relative; width: 100%; height: 100%; text-decoration: none;">
+         <img src="${post.img}" alt="Новости питомника Maclen мейн-кун Ижевск"
+              onerror="this.parentElement.innerHTML='<span class=&quot;blog-card__img-placeholder&quot;>🐾</span>';this.onerror=null"
+              loading="lazy" style="width:100%;height:100%;object-fit:cover;">
+         ${post.isVideo ? `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.6);border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;padding-left:6px;transition:0.2s;">▶</div>` : ''}
+       </a>`
+    : '<span class="blog-card__img-placeholder">🐾</span>';
+
   return `
     <div class="blog-card">
       <div class="blog-card__img">
-        ${hasImg
-          ? `<img src="${post.img}" alt="Новости питомника Maclen мейн-кун Ижевск"
-                  onerror="this.parentElement.innerHTML='<span class=&quot;blog-card__img-placeholder&quot;>🐾</span>';this.onerror=null"
-                  loading="lazy">`
-          : '<span class="blog-card__img-placeholder">🐾</span>'
-        }
+        ${imgContent}
       </div>
       <div class="blog-card__body">
         <div class="blog-card__date">${formatDate(post.date)}</div>
-        <div class="blog-card__text">${truncate(cleanText, 180)}</div>
-        <a href="${post.url}" target="_blank" class="blog-card__link">Читать в ВКонтакте →</a>
+        ${cleanText ? `<div class="blog-card__text">${truncate(cleanText, 180)}</div>` : ''}
+        <a href="${post.url}" target="_blank" class="blog-card__link" style="margin-top:auto;">${linkText}</a>
       </div>
     </div>`;
 }
@@ -390,10 +396,11 @@ async function loadBlog() {
     const data = await res.json();
     if (data && data.items && data.items.length) {
       posts = data.items
-        .filter(p => p.text && p.text.length > 5)
+        .filter(p => (p.text && p.text.length > 5) || (p.attachments && p.attachments.length > 0))
         .slice(0, 6)
         .map(p => {
           let photoUrl = null;
+          let isVideo = false;
           if (p.attachments) {
             const photoAtt = p.attachments.find(a => a.type === 'photo');
             if (photoAtt && photoAtt.photo && photoAtt.photo.sizes) {
@@ -403,13 +410,15 @@ async function loadBlog() {
               const videoAtt = p.attachments.find(a => a.type === 'video');
               if (videoAtt && videoAtt.video && videoAtt.video.image) {
                 photoUrl = videoAtt.video.image[videoAtt.video.image.length - 1].url;
+                isVideo = true;
               }
             }
           }
           return {
             date: p.date,
-            text: p.text,
+            text: p.text || '',
             img: photoUrl,
+            isVideo: isVideo,
             url: `https://vk.com/maclen?w=wall-225204095_${p.id}`,
           };
         });
