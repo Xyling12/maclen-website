@@ -385,29 +385,40 @@ async function loadBlog() {
 
   let posts = null;
 
-  if (VK_TOKEN) {
-    // Try Elena's personal wall first
-    const res = await vkCall('wall.get', {
-      owner_id: VK_OWNER_ID_ELENA,
-      count: 6,
-      filter: 'owner',
-    });
-    if (res && res.items && res.items.length) {
-      posts = res.items
-        .filter(p => p.text && p.text.length > 20)
+  try {
+    const res = await fetch('/api/wall');
+    const data = await res.json();
+    if (data && data.items && data.items.length) {
+      posts = data.items
+        .filter(p => p.text && p.text.length > 5)
         .slice(0, 6)
-        .map(p => ({
-          date: p.date,
-          text: p.text,
-          img: p.attachments
-            ? getBestPhoto(p.attachments.find(a => a.type === 'photo')?.photo?.sizes)
-            : null,
-          url: `https://vk.com/id${VK_OWNER_ID_ELENA}?w=wall${VK_OWNER_ID_ELENA}_${p.id}`,
-        }));
+        .map(p => {
+          let photoUrl = null;
+          if (p.attachments) {
+            const photoAtt = p.attachments.find(a => a.type === 'photo');
+            if (photoAtt && photoAtt.photo && photoAtt.photo.sizes) {
+              photoUrl = getBestPhoto(photoAtt.photo.sizes);
+            } else {
+              // Video thumbnail fallback
+              const videoAtt = p.attachments.find(a => a.type === 'video');
+              if (videoAtt && videoAtt.video && videoAtt.video.image) {
+                photoUrl = videoAtt.video.image[videoAtt.video.image.length - 1].url;
+              }
+            }
+          }
+          return {
+            date: p.date,
+            text: p.text,
+            img: photoUrl,
+            url: `https://vk.com/maclen?w=wall-225204095_${p.id}`,
+          };
+        });
     }
+  } catch (err) {
+    console.warn('Failed to load wall items:', err);
   }
 
-  if (!posts) posts = FALLBACK_POSTS;
+  if (!posts || posts.length === 0) posts = FALLBACK_POSTS;
 
   grid.innerHTML = posts.map(renderBlogCard).join('');
   grid.querySelectorAll('.blog-card').forEach(el => {

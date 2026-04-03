@@ -91,6 +91,38 @@ app.get('/api/market', async (req, res) => {
   }
 });
 
+app.get('/api/wall', async (req, res) => {
+  try {
+    const USER_TOKEN = process.env.VK_USER_TOKEN;
+    if (!USER_TOKEN) {
+      console.error('Missing VK_USER_TOKEN environment variable');
+      return res.status(500).json({ error: 'Wall API misconfiguration' });
+    }
+
+    const query = new URLSearchParams({
+      owner_id: '-225204095',
+      count: '6',
+      extended: '1',
+      access_token: USER_TOKEN,
+      v: VK_API_V
+    });
+
+    const url = `https://api.vk.com/method/wall.get?${query}`;
+    const vkRes = await fetch(url);
+    const vkData = await vkRes.json();
+    
+    if (vkData.error) {
+      console.error('VK Wall Error:', vkData.error);
+      return res.status(500).json({ error: 'Failed to fetch wall from VK' });
+    }
+
+    return res.status(200).json(vkData.response);
+  } catch (error) {
+    console.error('Wall API Error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Fallback for SPA routing
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
