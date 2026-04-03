@@ -280,6 +280,7 @@ function renderKittenCard(k, i) {
         <img src="${k.img}" alt="${k.name} — мейн-кун, питомник Maclen Ижевск"
              onerror="this.src='https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&q=80';this.onerror=null"
              loading="lazy">
+        ${k.videoIframeUrl ? '<div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Видео</div>' : ''}
         <span class="kitten-card__status kitten-card__status--${statusClass}">${statusLabel}</span>
       </div>
       <div class="kitten-card__body">
@@ -320,6 +321,7 @@ async function loadKittens() {
           status: item.availability === 0 ? 'free' : 'reserved',
           img: item.thumb_photo || '/images/cat_placeholder.jpg',
           photos: photos,
+          videoIframeUrl: item.videoIframeUrl || null,
           vkUrl: item.market_url || `https://vk.com/maclen`
         };
       });
@@ -359,7 +361,32 @@ window.openKittenModal = function(index) {
   document.getElementById('kModalStatus').innerText = k.status === 'free' ? 'Свободен' : 'Забронирован';
   document.getElementById('kModalStatus').style.color = k.status === 'free' ? 'var(--green)' : 'var(--text-muted)';
   document.getElementById('kModalDesc').innerText = k.longDesc;
-  document.getElementById('kModalMainImg').src = k.photos[0];
+  
+  const mainImgContainer = document.getElementById('kModalMainImg').parentElement;
+  if (k.videoIframeUrl) {
+      if (!document.getElementById('kModalVideoFrame')) {
+          const iframe = document.createElement('iframe');
+          iframe.id = 'kModalVideoFrame';
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          iframe.style.position = 'absolute';
+          iframe.style.top = '0';
+          iframe.style.left = '0';
+          iframe.style.border = 'none';
+          iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+          mainImgContainer.appendChild(iframe);
+      }
+      document.getElementById('kModalVideoFrame').src = k.videoIframeUrl;
+      document.getElementById('kModalVideoFrame').style.display = 'block';
+      document.getElementById('kModalMainImg').style.display = 'none';
+  } else {
+      if (document.getElementById('kModalVideoFrame')) {
+          document.getElementById('kModalVideoFrame').style.display = 'none';
+          document.getElementById('kModalVideoFrame').src = '';
+      }
+      document.getElementById('kModalMainImg').style.display = 'block';
+      document.getElementById('kModalMainImg').src = k.photos[0];
+  }
 
   const thumbsContainer = document.getElementById('kModalThumbs');
   thumbsContainer.innerHTML = '';
@@ -368,8 +395,13 @@ window.openKittenModal = function(index) {
     const img = document.createElement('img');
     img.src = src;
     img.loading = 'lazy';
-    if (idx === 0) img.classList.add('active');
+    if (idx === 0 && !k.videoIframeUrl) img.classList.add('active');
     img.onclick = () => {
+      if (document.getElementById('kModalVideoFrame')) {
+          document.getElementById('kModalVideoFrame').style.display = 'none';
+          document.getElementById('kModalVideoFrame').src = '';
+      }
+      document.getElementById('kModalMainImg').style.display = 'block';
       document.getElementById('kModalMainImg').src = src;
       thumbsContainer.querySelectorAll('img').forEach(i => i.classList.remove('active'));
       img.classList.add('active');
@@ -385,6 +417,9 @@ window.openKittenModal = function(index) {
 window.closeKittenModal = function() {
   document.getElementById('kittenModal').classList.remove('active');
   document.body.style.overflow = '';
+  if (document.getElementById('kModalVideoFrame')) {
+      document.getElementById('kModalVideoFrame').src = ''; // stop audio playback
+  }
 };
 
 window.bookKitten = function(index) {
