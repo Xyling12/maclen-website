@@ -223,14 +223,28 @@ window.openPostModal = function(index) {
     container.innerHTML = `<iframe src="https://vk.com/video_ext.php?oid=${post.videoOwnerId}&id=${post.videoId}&hd=2" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
   } else {
     container.style.aspectRatio = 'auto';
+
+    // Format text beautifully for mobile reading
+    const formattedText = (post.text || '')
+      .split('\n\n')
+      .map(p => p.trim())
+      .filter(p => p.length > 0)
+      .map(p => `<p style="margin-bottom: 1.25rem;">${p.replace(/\n/g, '<br>')}</p>`)
+      .join('');
+
     container.innerHTML = `
       <div style="display:flex; flex-direction:column; max-height:85vh; background:#fff; overflow-y:auto; overflow-x:hidden;">
-        ${post.img ? `<img src="${post.img}" style="width:100%; max-height:60vh; object-fit:contain; background:#000;">` : ''}
-        <div style="padding:1.5rem; color:#333; font-size:1rem; line-height:1.6; white-space:pre-wrap; font-family:var(--font-sans);">
-          <div style="color:var(--text-light); font-size:0.875rem; margin-bottom:1rem;">${formatDate(post.date)}</div>
-          ${post.text}
-          <div style="margin-top:1.5rem;">
-            <a href="${post.url}" target="_blank" style="display:inline-block; color:var(--green); font-weight:600; text-decoration:none;">Открыть в ВКонтакте →</a>
+        ${post.img ? `<img src="${post.img}" style="width:100%; max-height:50vh; object-fit:cover; background:#f4f4f4; border-bottom:1px solid #eee;">` : ''}
+        <div style="padding: 1.5rem 1.25rem; color:#222; font-size:1.05rem; line-height:1.7; font-family:var(--font-sans);">
+          <div style="color:var(--text-light); font-size:0.875rem; margin-bottom:1.5rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">${formatDate(post.date)}</div>
+          <div style="color:#222;">
+            ${post.text ? formattedText : ''}
+          </div>
+          <div style="margin-top:0.5rem; padding-top:1.5rem; border-top: 1px solid #eee;">
+            <a href="${post.url}" target="_blank" style="display:inline-flex; align-items:center; gap:0.5rem; color:white; background:var(--green); font-weight:600; padding:12px 20px; border-radius:8px; text-decoration:none; box-shadow:0 4px 10px rgba(84,113,83,0.3); transition: transform 0.2s;">
+              <span>Открыть в ВКонтакте</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
           </div>
         </div>
       </div>
