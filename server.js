@@ -101,7 +101,7 @@ app.get('/api/wall', async (req, res) => {
 
     const query = new URLSearchParams({
       owner_id: '-225204095',
-      count: '6',
+      count: '15',
       extended: '1',
       access_token: USER_TOKEN,
       v: VK_API_V

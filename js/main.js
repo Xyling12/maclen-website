@@ -226,6 +226,13 @@ window.closeVideoModal = function() {
   document.body.style.overflow = '';
 };
 
+window.openImageModal = function(imgUrl) {
+  const container = document.getElementById('videoModalContainer');
+  container.innerHTML = `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:12px;">`;
+  document.getElementById('videoModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
 // ============================================================
 // KITTENS — VK Market
 // ============================================================
@@ -377,18 +384,19 @@ const FALLBACK_POSTS = [
 function renderBlogCard(post) {
   const hasImg = post.img && post.img.length > 0;
   const cleanText = stripEmoji(post.text || '');
-  const linkText = post.isVideo ? 'Смотреть видео в ВКонтакте →' : 'Читать в ВКонтакте →';
+  const linkText = post.isVideo ? 'Видео в ВКонтакте →' : 'Читать в ВКонтакте →';
   
   const linkAction = post.isVideo 
     ? `onclick="openVideoModal('${post.videoOwnerId}', '${post.videoId}'); return false;"` 
-    : '';
+    : (hasImg ? `onclick="openImageModal('${post.img}'); return false;"` : '');
 
   const imgContent = hasImg
-    ? `<a href="${post.url}" target="_blank" ${linkAction} style="display: block; position: relative; width: 100%; height: 100%; text-decoration: none;">
+    ? `<a href="${post.url}" target="_blank" ${linkAction} style="display: block; position: relative; width: 100%; height: 100%; text-decoration: none; cursor: zoom-in;">
          <img src="${post.img}" alt="Новости питомника Maclen мейн-кун Ижевск"
               onerror="this.parentElement.innerHTML='<span class=&quot;blog-card__img-placeholder&quot;>🐾</span>';this.onerror=null"
               loading="lazy" style="width:100%;height:100%;object-fit:cover;">
          ${post.isVideo ? `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.6);border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;padding-left:6px;transition:0.2s;">▶</div>` : ''}
+         ${!post.isVideo && post.is_pinned ? `<div style="position:absolute;top:10px;right:10px;background:var(--green);color:white;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;box-shadow:0 2px 5px rgba(0,0,0,0.2);">📌 Закреплено</div>` : ''}
        </a>`
     : '<span class="blog-card__img-placeholder">🐾</span>';
 
@@ -417,7 +425,6 @@ async function loadBlog() {
     if (data && data.items && data.items.length) {
       posts = data.items
         .filter(p => (p.text && p.text.length > 5) || (p.attachments && p.attachments.length > 0))
-        .slice(0, 6)
         .map(p => {
           let photoUrl = null;
           let isVideo = false;
@@ -443,11 +450,14 @@ async function loadBlog() {
             text: p.text || '',
             img: photoUrl,
             isVideo: isVideo,
+            is_pinned: p.is_pinned === 1,
             videoOwnerId: videoOwnerId,
             videoId: videoId,
             url: `https://vk.com/maclen?w=wall-225204095_${p.id}`,
           };
-        });
+        })
+        .sort((a, b) => (b.is_pinned === true ? 1 : 0) - (a.is_pinned === true ? 1 : 0))
+        .slice(0, 6);
     }
   } catch (err) {
     console.warn('Failed to load wall items:', err);
