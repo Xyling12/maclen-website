@@ -1468,7 +1468,8 @@ footer {
 .kitten-modal__main-img {
   width: 100%;
   aspect-ratio: 4/3;
-  object-fit: cover;
+  object-fit: contain;
+  background-color: var(--sand-light);
 }
 .kitten-modal__thumbs {
   display: flex;
