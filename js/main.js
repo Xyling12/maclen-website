@@ -211,26 +211,39 @@ async function vkCall(method, params = {}) {
 }
 
 // ====================================================
-// VK VIDEO MODAL
+// VK POST MODAL
 // ====================================================
-window.openVideoModal = function(ownerId, videoId) {
-  const container = document.getElementById('videoModalContainer');
-  container.innerHTML = `<iframe src="https://vk.com/video_ext.php?oid=${ownerId}&id=${videoId}&hd=2" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
-  document.getElementById('videoModal').classList.add('active');
+window.openPostModal = function(index) {
+  const post = window.VK_POSTS && window.VK_POSTS[index];
+  if (!post) return;
+  const container = document.getElementById('postModalContainer');
+  
+  if (post.isVideo) {
+    container.style.aspectRatio = '16/9';
+    container.innerHTML = `<iframe src="https://vk.com/video_ext.php?oid=${post.videoOwnerId}&id=${post.videoId}&hd=2" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
+  } else {
+    container.style.aspectRatio = 'auto';
+    container.innerHTML = `
+      <div style="display:flex; flex-direction:column; max-height:85vh; background:#fff; overflow-y:auto; overflow-x:hidden;">
+        ${post.img ? `<img src="${post.img}" style="width:100%; max-height:60vh; object-fit:contain; background:#000;">` : ''}
+        <div style="padding:1.5rem; color:#333; font-size:1rem; line-height:1.6; white-space:pre-wrap; font-family:var(--font-sans);">
+          <div style="color:var(--text-light); font-size:0.875rem; margin-bottom:1rem;">${formatDate(post.date)}</div>
+          ${post.text}
+          <div style="margin-top:1.5rem;">
+            <a href="${post.url}" target="_blank" style="display:inline-block; color:var(--green); font-weight:600; text-decoration:none;">Открыть в ВКонтакте →</a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  document.getElementById('postModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 };
 
-window.closeVideoModal = function() {
-  document.getElementById('videoModal').classList.remove('active');
-  document.getElementById('videoModalContainer').innerHTML = '';
+window.closePostModal = function() {
+  document.getElementById('postModal').classList.remove('active');
+  document.getElementById('postModalContainer').innerHTML = '';
   document.body.style.overflow = '';
-};
-
-window.openImageModal = function(imgUrl) {
-  const container = document.getElementById('videoModalContainer');
-  container.innerHTML = `<img src="${imgUrl}" style="width:100%;height:100%;object-fit:contain;border-radius:12px;">`;
-  document.getElementById('videoModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
 };
 
 // ============================================================
@@ -381,17 +394,15 @@ const FALLBACK_POSTS = [
   { date: 1708400000, text: '🌟 Питание мейн-куна — самый частый вопрос! Кормим цельным сухим кормом + натуральные добавки.', img: '/images/cat6.webp', url: 'https://vk.com/id694180609' },
 ];
 
-function renderBlogCard(post) {
+function renderBlogCard(post, index) {
   const hasImg = post.img && post.img.length > 0;
   const cleanText = stripEmoji(post.text || '');
-  const linkText = post.isVideo ? 'Видео в ВКонтакте →' : 'Читать в ВКонтакте →';
+  const linkText = post.isVideo ? 'Смотреть видео' : 'Читать полностью';
   
-  const linkAction = post.isVideo 
-    ? `onclick="openVideoModal('${post.videoOwnerId}', '${post.videoId}'); return false;"` 
-    : (hasImg ? `onclick="openImageModal('${post.img}'); return false;"` : '');
+  const linkAction = `onclick="openPostModal(${index}); return false;"`;
 
   const imgContent = hasImg
-    ? `<a href="${post.url}" target="_blank" ${linkAction} style="display: block; position: relative; width: 100%; height: 100%; text-decoration: none; cursor: zoom-in;">
+    ? `<a href="${post.url}" ${linkAction} style="display: block; position: relative; width: 100%; height: 100%; text-decoration: none; cursor: pointer;">
          <img src="${post.img}" alt="Новости питомника Maclen мейн-кун Ижевск"
               onerror="this.parentElement.innerHTML='<span class=&quot;blog-card__img-placeholder&quot;>🐾</span>';this.onerror=null"
               loading="lazy" style="width:100%;height:100%;object-fit:cover;">
@@ -408,7 +419,7 @@ function renderBlogCard(post) {
       <div class="blog-card__body">
         <div class="blog-card__date">${formatDate(post.date)}</div>
         ${cleanText ? `<div class="blog-card__text">${truncate(cleanText, 180)}</div>` : ''}
-        <a href="${post.url}" target="_blank" class="blog-card__link" style="margin-top:auto;">${linkText}</a>
+        <a href="#" ${linkAction} class="blog-card__link" style="margin-top:auto;">${linkText}</a>
       </div>
     </div>`;
 }
@@ -464,8 +475,9 @@ async function loadBlog() {
   }
 
   if (!posts || posts.length === 0) posts = FALLBACK_POSTS;
+  window.VK_POSTS = posts;
 
-  grid.innerHTML = posts.map(renderBlogCard).join('');
+  grid.innerHTML = posts.map((post, index) => renderBlogCard(post, index)).join('');
   grid.querySelectorAll('.blog-card').forEach(el => {
     el.classList.add('fade-up');
     observer.observe(el);
