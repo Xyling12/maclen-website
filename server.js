@@ -98,36 +98,14 @@ app.get('/api/market', async (req, res) => {
 
     const data = vkData.response;
     
-    // Auto-Link Videos to Kittens by Title Match
-    try {
-        const vUrl = `https://api.vk.com/method/video.get?owner_id=-225204095&count=100&access_token=${USER_TOKEN}&v=${VK_API_V}`;
-        const vRes = await fetch(vUrl);
-        const vData = await vRes.json();
-
-        if (vData.response && vData.response.items) {
-          const videoMap = {};
-          vData.response.items.forEach(v => {
-            if (v.title) {
-               videoMap[v.title.trim().toLowerCase()] = v.player;
-            }
-          });
-          
-          data.items = data.items.map(item => {
-            const cleanTitle = item.title.trim().toLowerCase();
-            // Try exact title matching or if video title contains the kitten name
-            for (let [vidTitle, playerUrl] of Object.entries(videoMap)) {
-               if (vidTitle === cleanTitle || vidTitle.includes(cleanTitle) || cleanTitle.includes(vidTitle)) {
-                   item.videoIframeUrl = playerUrl;
-                   break;
-               }
-            }
-            return item;
-          });
-        }
-    } catch (vidError) {
-       console.error('Failed to auto-link videos by title:', vidError);
-       // Fail silently and return normal items
-    }
+    // Auto-Link Videos directly attached to the Market items
+    data.items = data.items.map(item => {
+      if (item.videos && item.videos.length > 0) {
+          // Construct the iframe URL using the native video attachment
+          item.videoIframeUrl = `https://vk.com/video_ext.php?oid=${item.owner_id}&id=${item.videos[0].id}&hd=2`;
+      }
+      return item;
+    });
 
     return res.status(200).json(data);
   } catch (error) {
