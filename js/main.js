@@ -289,7 +289,7 @@ async function loadKittens() {
   });
 }
 
-function openKittenModal(index) {
+window.openKittenModal = function(index) {
   const k = globalKittensData[index];
   if (!k) return;
 
@@ -319,14 +319,14 @@ function openKittenModal(index) {
   const modal = document.getElementById('kittenModal');
   modal.classList.add('active');
   document.body.style.overflow = 'hidden';
-}
+};
 
-function closeKittenModal() {
+window.closeKittenModal = function() {
   document.getElementById('kittenModal').classList.remove('active');
   document.body.style.overflow = '';
-}
+};
 
-function bookKitten(index) {
+window.bookKitten = function(index) {
   const k = globalKittensData[index];
   if (!k) return;
   const wishesField = document.getElementById('wishes');
@@ -334,17 +334,17 @@ function bookKitten(index) {
     wishesField.value = 'Интересует котенок: ' + k.name;
   }
   window.location.hash = '#contacts';
-}
+};
 
-function bookFromModal() {
-  closeKittenModal();
+window.bookFromModal = function() {
+  window.closeKittenModal();
   const name = document.getElementById('kModalName').innerText;
   const wishesField = document.getElementById('wishes');
   if (wishesField) {
     wishesField.value = 'Интересует котенок: ' + name;
   }
   window.location.hash = '#contacts';
-}
+};
 
 // ============================================================
 // BLOG — VK Wall (Elena's profile)
