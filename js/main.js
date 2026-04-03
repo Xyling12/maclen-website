@@ -280,17 +280,17 @@ function renderKittenCard(k, i) {
         <img src="${k.img}" alt="${k.name} — мейн-кун, питомник Maclen Ижевск"
              onerror="this.src='https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&q=80';this.onerror=null"
              loading="lazy">
-        ${k.videoIframeUrl ? '<div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Видео</div>' : ''}
+        ${k.videoIframeUrl ? '<div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Видео</div>' : ''}
         <span class="kitten-card__status kitten-card__status--${statusClass}">${statusLabel}</span>
       </div>
       <div class="kitten-card__body">
         <div class="kitten-card__name display">${k.name}</div>
         <div class="kitten-card__details">${k.details}</div>
-        <div class="kitten-card__actions">
-          <button onclick="openKittenModal(${i})" class="btn btn-primary" style="cursor:pointer;">
+        <div class="kitten-card__actions" style="flex-direction: column; display: flex; gap: 0.5rem;">
+          <button onclick="openKittenModal(${i})" class="btn btn-primary" style="cursor:pointer; width: 100%; justify-content: center;">
             Узнать подробности
           </button>
-          <button onclick="bookKitten(${i})" class="btn btn-outline" style="cursor:pointer;">Оставить заявку</button>
+          <button onclick="bookKitten(${i})" class="btn btn-outline" style="cursor:pointer; width: 100%; justify-content: center;">Оставить заявку</button>
         </div>
       </div>
     </div>`;
