@@ -10,6 +10,18 @@ app.use(express.json());
 // Serve static files from the current directory
 app.use(express.static(__dirname));
 
+app.get('/api/testVideo', async (req, res) => {
+  try {
+    const USER_TOKEN = process.env.VK_USER_TOKEN;
+    const vUrl = `https://api.vk.com/method/video.get?owner_id=-225204095&count=5&access_token=${USER_TOKEN}&v=${VK_API_V}`;
+    const vRes = await fetch(vUrl);
+    const vData = await vRes.json();
+    return res.status(200).json(vData);
+  } catch (err) {
+    return res.status(500).json({ error: err.toString() });
+  }
+});
+
 const VK_TOKEN = process.env.VK_GROUP_TOKEN;
 const VK_USER_ID = '23912024'; // Maxim's ID temporarily
 const VK_API_V = '5.131';
