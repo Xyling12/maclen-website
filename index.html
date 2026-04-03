@@ -326,8 +326,10 @@
   <div class="kitten-modal__overlay" onclick="closeKittenModal()"></div>
   <div class="kitten-modal__content">
     <button class="kitten-modal__close" onclick="closeKittenModal()">×</button>
-    <div class="kitten-modal__left" style="position: relative;">
-      <img src="" id="kModalMainImg" class="kitten-modal__main-img" alt="Фото котенка мейн-кун">
+    <div class="kitten-modal__left">
+      <div style="position: relative; width: 100%; aspect-ratio: 4/3; background-color: var(--sand-light); border-radius: var(--radius-md); overflow: hidden;">
+        <img src="" id="kModalMainImg" class="kitten-modal__main-img" alt="Фото котенка мейн-кун">
+      </div>
       <div class="kitten-modal__thumbs" id="kModalThumbs"></div>
     </div>
     <div class="kitten-modal__right">
