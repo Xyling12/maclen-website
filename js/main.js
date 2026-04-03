@@ -236,10 +236,10 @@ function renderKittenCard(k, i) {
         <div class="kitten-card__name display">${k.name}</div>
         <div class="kitten-card__details">${k.details}</div>
         <div class="kitten-card__actions">
-          <button onclick="openKittenModal(${i})" class="btn btn-primary">
+          <button onclick="openKittenModal(${i})" class="btn btn-primary" style="cursor:pointer;">
             Узнать подробности
           </button>
-          <a href="#contacts" onclick="document.getElementById('wishes').value = 'Интересует котенок: ${encodeURIComponent(k.name)}'" class="btn btn-outline">Оставить заявку</a>
+          <button onclick="bookKitten(${i})" class="btn btn-outline" style="cursor:pointer;">Оставить заявку</button>
         </div>
       </div>
     </div>`;
@@ -326,11 +326,23 @@ function closeKittenModal() {
   document.body.style.overflow = '';
 }
 
+function bookKitten(index) {
+  const k = globalKittensData[index];
+  if (!k) return;
+  const wishesField = document.getElementById('wishes');
+  if (wishesField) {
+    wishesField.value = 'Интересует котенок: ' + k.name;
+  }
+  window.location.hash = '#contacts';
+}
+
 function bookFromModal() {
   closeKittenModal();
   const name = document.getElementById('kModalName').innerText;
   const wishesField = document.getElementById('wishes');
-  if(wishesField) wishesField.value = 'Интересует котенок: ' + name;
+  if (wishesField) {
+    wishesField.value = 'Интересует котенок: ' + name;
+  }
   window.location.hash = '#contacts';
 }
 
