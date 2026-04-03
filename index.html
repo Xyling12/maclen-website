@@ -7,6 +7,7 @@
   <meta name="description" content="Продаём котят мейн-кун в Ижевске. Питомник WCF, родословная, генетические тесты, доставка по России. Заводчик Елена: +7 (912) 757-01-36">
   <meta name="robots" content="index, follow">
   <meta name="yandex-verification" content="a26ce77a6d64837a" />
+  <meta name="google-site-verification" content="isZIstk-WaOKvtsiH80FbqA3EAwpl0-TZmZk6aP-LsE" />
   <link rel="canonical" href="https://maclencat.ru/">
 
   <!-- Open Graph -->
@@ -21,6 +22,10 @@
   <!-- Favicon & Icons -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
   <link rel="apple-touch-icon" href="/images/cat1.webp">
+
+  <!-- Preloads -->
+  <link rel="preload" href="/api/market" as="fetch" crossorigin="anonymous">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800&display=swap" as="style">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -168,19 +173,19 @@
       <div class="hero__collage">
         <div class="hero__collage-bg"></div>
         <div class="hero__circle hero__circle--main">
-          <img src="/images/cat1.webp" alt="Котята мейн-кун питомник Maclen Ижевск" loading="eager">
+          <img src="/images/cat1.webp" alt="Котята мейн-кун питомник Maclen Ижевск" loading="eager" fetchpriority="high" width="450" height="450" decoding="async">
         </div>
         <div class="hero__circle hero__circle--sm hero__circle--1">
-          <img src="/images/cat2.webp" alt="Мейн-кун котёнок" loading="eager">
+          <img src="/images/cat2.webp" alt="Мейн-кун котёнок" loading="eager" fetchpriority="high" width="180" height="180" decoding="async">
         </div>
         <div class="hero__circle hero__circle--sm hero__circle--2">
-          <img src="/images/cat3.webp" alt="Котёнок мейн-кун Maclen" loading="eager">
+          <img src="/images/cat3.webp" alt="Котёнок мейн-кун Maclen" loading="eager" width="160" height="160" decoding="async">
         </div>
         <div class="hero__circle hero__circle--sm hero__circle--3">
-          <img src="/images/cat4.webp" alt="Мейн-кун производитель WCF" loading="eager">
+          <img src="/images/cat4.webp" alt="Мейн-кун производитель WCF" loading="eager" width="220" height="220" decoding="async">
         </div>
         <div class="hero__circle hero__circle--sm hero__circle--4">
-          <img src="/images/cat5.webp" alt="Кот мейн-кун питомник Maclen" loading="eager">
+          <img src="/images/cat5.webp" alt="Кот мейн-кун питомник Maclen" loading="eager" width="140" height="140" decoding="async">
         </div>
       </div>
 
@@ -251,7 +256,7 @@
 
       <div class="about__photos fade-up">
         <div class="about__photo-main img-reveal blur-reveal">
-          <img src="/images/cat6.webp" alt="Елена Матросова — заводчик питомника Maclen Ижевск">
+          <img src="/images/cat6.webp" alt="Елена Матросова — заводчик питомника Maclen Ижевск" loading="lazy" width="400" height="500">
         </div>
         <div class="about__photo-badge">
           <div class="num">с 2022</div>
@@ -364,7 +369,7 @@
     <div class="parents__grid fade-up">
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
-          <img src="/images/cherry_maclen.webp" alt="Cherry Maclen d22 мейн-кун питомник Maclen">
+          <img src="/images/cherry_maclen.webp" alt="Cherry Maclen d22 мейн-кун питомник Maclen" loading="lazy" width="300" height="300">
         </div>
         <div class="parent-card__body">
           <div class="parent-card__name display">Cherry Maclen</div>
@@ -374,7 +379,7 @@
       </div>
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
-          <img src="/images/diana_maclen.webp" alt="Diana Maclen ns22 мейн-кун питомник Maclen">
+          <img src="/images/diana_maclen.webp" alt="Diana Maclen ns22 мейн-кун питомник Maclen" loading="lazy" width="300" height="300">
         </div>
         <div class="parent-card__body">
           <div class="parent-card__name display">Diana Maclen</div>
@@ -384,7 +389,7 @@
       </div>
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
-          <img src="/images/bella_maclen.webp" alt="Bella Maclen n22 мейн-кун питомник Maclen">
+          <img src="/images/bella_maclen.webp" alt="Bella Maclen n22 мейн-кун питомник Maclen" loading="lazy" width="300" height="300">
         </div>
         <div class="parent-card__body">
           <div class="parent-card__name display">Bella Maclen</div>
@@ -394,7 +399,7 @@
       </div>
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
-          <img src="/images/dustin_maclen.webp" alt="Dustin Maclen ns мейн-кун питомник Maclen">
+          <img src="/images/dustin_maclen.webp" alt="Dustin Maclen ns мейн-кун питомник Maclen" loading="lazy" width="300" height="300">
         </div>
         <div class="parent-card__body">
           <div class="parent-card__name display">Dustin Maclen</div>
@@ -404,7 +409,7 @@
       </div>
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
-          <img src="/images/trix_colossus.webp" alt="Trix Colossus f22 мейн-кун питомник Maclen">
+          <img src="/images/trix_colossus.webp" alt="Trix Colossus f22 мейн-кун питомник Maclen" loading="lazy" width="300" height="300">
         </div>
         <div class="parent-card__body">
           <div class="parent-card__name display">Trix Colossus</div>
@@ -414,7 +419,7 @@
       </div>
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
-          <img src="/images/calin_maclen.webp" alt="Calin Maclen g мейн-кун питомник Maclen">
+          <img src="/images/calin_maclen.webp" alt="Calin Maclen g мейн-кун питомник Maclen" loading="lazy" width="300" height="300">
         </div>
         <div class="parent-card__body">
           <div class="parent-card__name display">Calin Maclen</div>
