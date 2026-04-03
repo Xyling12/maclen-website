@@ -309,6 +309,17 @@ async function loadKittens() {
           vkUrl: item.market_url || `https://vk.com/maclen`
         };
       });
+
+      // Dynamically update Hero Collage with real kittens if available
+      const heroImgs = document.querySelectorAll('.hero__circle img');
+      if (heroImgs && heroImgs.length > 0) {
+        kittens.slice(0, heroImgs.length).forEach((k, idx) => {
+          if (k.img) {
+            heroImgs[idx].src = k.img;
+            heroImgs[idx].alt = k.name;
+          }
+        });
+      }
     }
   } catch (err) {
     console.warn('Failed to load market items:', err);
