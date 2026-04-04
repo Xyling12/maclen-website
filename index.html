@@ -15,7 +15,7 @@
   <meta property="og:url" content="https://maclen.ru/">
 
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐾</text></svg>">
+  <link rel="icon" type="image/jpeg" href="/images/logo.jpg">
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/style.css">
@@ -39,7 +39,7 @@
     "aggregateRating": {
       "@type": "AggregateRating",
       "ratingValue": "5.0",
-      "reviewCount": "91",
+      "reviewCount": "2",
       "bestRating": "5"
     },
     "sameAs": ["https://vk.com/maclen", "https://vk.com/id694180609"]
@@ -67,18 +67,19 @@
 <nav class="nav" id="nav">
   <div class="container nav__inner">
     <a href="#" class="nav__logo">
-      <span>🐾</span> Maclen
+      <img src="/images/logo.jpg" alt="Maclen" class="nav__logo-img"> Maclen
     </a>
     <ul class="nav__links">
-      <li><a href="#about">О нас</a></li>
-      <li><a href="#kittens">Котята</a></li>
+      <li><a href="#kittens">Котёнок</a></li>
+      <li><a href="#about">Питомник</a></li>
       <li><a href="#parents">Производители</a></li>
+      <li><a href="#reviews">Отзывы</a></li>
       <li><a href="#blog">Блог</a></li>
       <li><a href="#contacts">Контакты</a></li>
     </ul>
     <div class="nav__cta">
-      <a href="https://wa.me/79127570136" target="_blank" class="btn btn-primary" style="padding:.65rem 1.25rem;font-size:.85rem">
-        💬 WhatsApp
+      <a href="#contacts" class="btn btn-primary" style="padding:.65rem 1.25rem;font-size:.85rem">
+        Связаться
       </a>
     </div>
     <button class="nav__burger" id="burgerBtn" aria-label="Меню">
@@ -90,76 +91,86 @@
 <!-- Mobile Nav -->
 <div class="mobile-nav" id="mobileNav">
   <span class="mobile-nav-close" id="navClose">✕</span>
-  <a href="#about" class="nav-mob-link">О нас</a>
-  <a href="#kittens" class="nav-mob-link">Котята</a>
+  <a href="#kittens" class="nav-mob-link">Котёнок</a>
+  <a href="#about" class="nav-mob-link">Питомник</a>
   <a href="#parents" class="nav-mob-link">Производители</a>
+  <a href="#reviews" class="nav-mob-link">Отзывы</a>
   <a href="#blog" class="nav-mob-link">Блог</a>
   <a href="#contacts" class="nav-mob-link">Контакты</a>
-  <a href="https://wa.me/79127570136" class="btn btn-primary">💬 WhatsApp</a>
+  <a href="#contacts" class="btn btn-primary">Связаться</a>
 </div>
 
 <!-- ====================================================
      HERO
 ==================================================== -->
 <section class="hero" id="home">
+  <!-- Decorative botanical leaves -->
+  <svg class="hero__leaf hero__leaf--top-right" width="120" height="180" viewBox="0 0 120 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M60 0C60 0 20 60 10 120C0 180 60 180 60 180C60 180 120 180 110 120C100 60 60 0 60 0Z" fill="#4A7C59" opacity=".12"/>
+    <path d="M60 10L60 170" stroke="#4A7C59" stroke-width="1" opacity=".15"/>
+    <path d="M60 40C40 55 25 80 20 100" stroke="#4A7C59" stroke-width="1" opacity=".12" fill="none"/>
+    <path d="M60 40C80 55 95 80 100 100" stroke="#4A7C59" stroke-width="1" opacity=".12" fill="none"/>
+    <path d="M60 80C45 90 30 110 28 130" stroke="#4A7C59" stroke-width="1" opacity=".1" fill="none"/>
+    <path d="M60 80C75 90 90 110 92 130" stroke="#4A7C59" stroke-width="1" opacity=".1" fill="none"/>
+  </svg>
+  <svg class="hero__leaf hero__leaf--bottom-left" width="100" height="150" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M50 150C50 150 0 100 5 50C10 0 50 0 50 0C50 0 90 0 95 50C100 100 50 150 50 150Z" fill="#4A7C59" opacity=".08"/>
+    <path d="M50 10L50 140" stroke="#4A7C59" stroke-width="1" opacity=".1"/>
+  </svg>
+  <svg class="hero__leaf hero__leaf--mid-right" width="80" height="60" viewBox="0 0 80 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="40" cy="30" rx="38" ry="25" fill="#4A7C59" opacity=".06" transform="rotate(-15 40 30)"/>
+    <path d="M5 30C30 30 50 25 75 20" stroke="#4A7C59" stroke-width="1" opacity=".1" fill="none"/>
+  </svg>
+  <!-- Small paw prints decoration -->
+
+
   <div class="container">
     <div class="hero__inner">
 
+      <!-- Left: Circular Photo Collage -->
+      <div class="hero__collage">
+        <div class="hero__collage-bg"></div>
+        <div class="hero__circle hero__circle--main">
+          <img src="/images/cat1.png" alt="Котята мейн-кун питомник Maclen Ижевск" loading="eager">
+        </div>
+        <div class="hero__circle hero__circle--sm hero__circle--1">
+          <img src="/images/cat2.png" alt="Мейн-кун котёнок" loading="eager">
+        </div>
+        <div class="hero__circle hero__circle--sm hero__circle--2">
+          <img src="/images/cat3.png" alt="Котёнок мейн-кун Maclen" loading="eager">
+        </div>
+        <div class="hero__circle hero__circle--sm hero__circle--3">
+          <img src="/images/cat4.png" alt="Мейн-кун производитель WCF" loading="eager">
+        </div>
+        <div class="hero__circle hero__circle--sm hero__circle--4">
+          <img src="/images/cat5.png" alt="Кот мейн-кун питомник Maclen" loading="eager">
+        </div>
+      </div>
+
+      <!-- Right: Text Content -->
       <div class="hero__content">
         <div class="hero__eyebrow">
-          🐾 Питомник WCF · Ижевск · Доставка по всей России
+          — Семейный питомник в Ижевске —
         </div>
         <h1 class="hero__title display">
-          Мейн-куны<br><em>с большим сердцем</em>
+          Котята мейн-кун<br><em>с большим сердцем</em>
         </h1>
         <p class="hero__subtitle">
-          Семейный питомник в Ижевске. Котята от титулованных производителей — с родословной WCF, генетическими тестами и любовью. Доставляем по всей России.
+          Котята мейн-кун покоряют вас большим сердцем, компанейским характером и преданностью. Наши малыши растут в семейном тепле и готовы стать частью вашей жизни.
         </p>
         <div class="hero__actions">
-          <a href="#kittens" class="btn btn-primary">Смотреть котят 🐱</a>
-          <a href="https://wa.me/79127570136" target="_blank" class="btn btn-outline">Написать Елене</a>
-        </div>
-        <div class="hero__badges">
-          <div class="hero__badge">
-            <div class="hero__badge-icon">⭐</div>
-            <span>5.0 ВКонтакте</span>
-          </div>
-          <div class="hero__badge">
-            <div class="hero__badge-icon">🏆</div>
-            <span>WCF питомник</span>
-          </div>
-          <div class="hero__badge">
-            <div class="hero__badge-icon">🚚</div>
-            <span>Доставка по РФ</span>
-          </div>
+          <a href="#kittens" class="btn btn-primary">Выбрать котёнка</a>
+          <a href="#about" class="hero__text-link">О питомнике →</a>
         </div>
       </div>
 
-      <div class="hero__visual">
-        <div class="hero__photos">
-          <div class="hero__photo hero__photo--main fade-up">
-            <div class="img-reveal">
-              <img src="/images/cat1.png" alt="Котята мейн-кун питомник Maclen Ижевск" loading="eager">
-            </div>
-          </div>
-          <div class="hero__photo hero__photo--sm fade-up" style="transition-delay:.1s">
-            <div class="img-reveal">
-              <img src="/images/cat2.png" alt="Мейн-кун котёнок Ижевск" loading="eager">
-            </div>
-          </div>
-          <div class="hero__photo hero__photo--sm fade-up" style="transition-delay:.2s">
-            <div class="img-reveal">
-              <img src="/images/cat3.png" alt="Мейн-кун производители WCF" loading="eager">
-            </div>
-          </div>
-        </div>
-        <div class="hero__review">
-          <div class="hero__review-stars">★★★★★</div>
-          <div class="hero__review-text">«Мейн-куны — настоящие компаньоны! Спасибо Елене за замечательного котёнка»</div>
-          <div class="hero__review-author">— Паша, Москва</div>
-        </div>
-      </div>
+    </div>
 
+    <!-- Bottom Review Strip -->
+    <div class="hero__review-strip">
+      <div class="hero__review-stars">★★★★★</div>
+      <div class="hero__review-text">«Невероятный котёнок, Елена отличный заводчик!»</div>
+      <div class="hero__review-author">— Паша, Москва</div>
     </div>
   </div>
 </section>
@@ -172,7 +183,7 @@
     <div class="trust-bar__inner">
       <div class="trust-item">
         <span class="trust-item__icon">🏅</span>
-        <div class="trust-item__text"><strong>WCF</strong>зарегистрированный</div>
+        <div class="trust-item__text"><strong>WCF регистрация</strong>№ 49185-2025</div>
       </div>
       <div class="trust-item">
         <span class="trust-item__icon">💉</span>
@@ -203,28 +214,28 @@
 
       <div class="about__photos fade-up">
         <div class="about__photo-main img-reveal blur-reveal">
-          <img src="/images/cat6.png" alt="Елена Матросова — заводчик питомника Maclen Ижевск">
+          <img src="/images/cattery_main.jpg" alt="Елена Матросова — заводчик питомника Maclen Ижевск">
         </div>
         <div class="about__photo-badge">
-          <div class="num" id="yearsCounter">5+</div>
-          <div class="label">лет опыта</div>
+          <div class="num">с 2022</div>
+          <div class="label">года в породе</div>
         </div>
       </div>
 
       <div class="about__text fade-up">
         <div class="eyebrow eyebrow-line swipe-in">О питомнике</div>
         <h2 class="display section-title" id="aboutTitle">Знакомьтесь —<br>питомник <em>Maclen</em></h2>
-        <p>Меня зовут Елена, и я занимаюсь разведением мейн-кунов в Ижевске с любовью и ответственностью. Питомник Maclen зарегистрирован в международной системе WCF.</p>
+        <p>Меня зовут Елена, и я занимаюсь мейн-кунами с 2022 года. Наша история началась с первой кошки, которая навсегда влюбила нас в эту породу. Свой первый официальный помёт «А» мы встретили 11 января 2024 года, а сегодня Maclen — это официально зарегистрированный питомник в международной системе WCF (сертификат № 49185-2025 от 04.02.2025).</p>
         <p>Все наши кошки живут в домашних условиях, в тесном контакте с людьми. Котята вырастают социализированными, ласковыми и готовыми стать полноценными членами вашей семьи.</p>
         <p>Мы тщательно следим за здоровьем производителей, проводим генетические тесты и сотрудничаем только с лучшими зарубежными и российскими питомниками.</p>
         <div class="about__stats">
           <div class="stat-card">
             <div class="num counter" data-target="7">0</div>
-            <div class="label">пометов</div>
+            <div class="label">помётов</div>
           </div>
           <div class="stat-card">
-            <div class="num counter" data-target="50">0</div>
-            <div class="label">котят</div>
+            <div class="num counter" data-target="3">0</div>
+            <div class="label">активные вязки</div>
           </div>
           <div class="stat-card">
             <div class="num">5.0</div>
@@ -277,32 +288,62 @@
     <div class="parents__grid fade-up">
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
-          <img src="/images/cat4.png" alt="Cassie SharmMuar">
+          <img src="/images/cherry_maclen.jpg" alt="Cherry Maclen d22 мейн-кун питомник Maclen">
         </div>
         <div class="parent-card__body">
-          <div class="parent-card__name display">Cassie SharmMuar</div>
-          <div class="parent-card__meta">Кошка · Окрас ns 22 · WCF</div>
-          <span class="parent-card__badge">Генетика N/N</span>
+          <div class="parent-card__name display">Cherry Maclen</div>
+          <div class="parent-card__meta">Кошка · Окрас d22 (красный мраморный) · Дата рождения: 26.01.2025</div>
+          <span class="parent-card__badge">Питомник Maclen · WCF</span>
         </div>
       </div>
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
-          <img src="/images/cat5.png" alt="Adam Maclen">
+          <img src="/images/diana_maclen.jpg" alt="Diana Maclen ns22 мейн-кун питомник Maclen">
         </div>
         <div class="parent-card__body">
-          <div class="parent-card__name display">Adam Maclen</div>
-          <div class="parent-card__meta">Кот · Окрас n 22 · WCF</div>
-          <span class="parent-card__badge">Генетика N/N</span>
+          <div class="parent-card__name display">Diana Maclen</div>
+          <div class="parent-card__meta">Кошка · Окрас ns 22 (чёрный серебристый мрамор) · Дата рождения: 13.03.2025</div>
+          <span class="parent-card__badge">Питомник Maclen · WCF</span>
         </div>
       </div>
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
-          <img src="/images/cat1.png" alt="Bolk Golden Glory">
+          <img src="/images/bella_maclen.jpg" alt="Bella Maclen n22 мейн-кун питомник Maclen">
         </div>
         <div class="parent-card__body">
-          <div class="parent-card__name display">Bolk Golden Glory</div>
-          <div class="parent-card__meta">Кот · Окрас ns · WCF</div>
-          <span class="parent-card__badge">Генетика N/N</span>
+          <div class="parent-card__name display">Bella Maclen</div>
+          <div class="parent-card__meta">Кошка · Окрас n 22 (чёрный мраморный) · Дата рождения: 11.09.2024</div>
+          <span class="parent-card__badge">Питомник Maclen · WCF</span>
+        </div>
+      </div>
+      <div class="parent-card">
+        <div class="parent-card__img img-reveal">
+          <img src="/images/dustin_maclen.jpg" alt="Dustin Maclen ns мейн-кун питомник Maclen">
+        </div>
+        <div class="parent-card__body">
+          <div class="parent-card__name display">Dustin Maclen</div>
+          <div class="parent-card__meta">Кот · Окрас ns (чёрный дым) · Дата рождения: 13.03.2025</div>
+          <span class="parent-card__badge">Питомник Maclen · WCF</span>
+        </div>
+      </div>
+      <div class="parent-card">
+        <div class="parent-card__img img-reveal">
+          <img src="/images/trix_colossus.jpg" alt="Trix Colossus f22 мейн-кун питомник Maclen">
+        </div>
+        <div class="parent-card__body">
+          <div class="parent-card__name display">Trix Colossus</div>
+          <div class="parent-card__meta">Кошка · Окрас f 22 (черепаховый мраморный) · Дата рождения: 21.09.2022</div>
+          <span class="parent-card__badge">Основательница · Питомник Maclen · WCF</span>
+        </div>
+      </div>
+      <div class="parent-card">
+        <div class="parent-card__img img-reveal">
+          <img src="/images/calin_maclen.jpg" alt="Calin Maclen g мейн-кун питомник Maclen">
+        </div>
+        <div class="parent-card__body">
+          <div class="parent-card__name display">Calin Maclen</div>
+          <div class="parent-card__meta">Кошка · Окрас g (голубокремовая черепаховая) · Дата рождения: 26.01.2025</div>
+          <span class="parent-card__badge">Питомник Maclen · WCF</span>
         </div>
       </div>
     </div>
@@ -357,24 +398,24 @@
       <div class="reviews__rating-num">5.0</div>
       <div>
         <div class="reviews__stars">★★★★★</div>
-        <div style="font-size:.85rem;color:var(--text-muted)">91+ отзыв · ВКонтакте</div>
+        <div style="font-size:.85rem;color:var(--text-muted)">Отзывы · ВКонтакте</div>
       </div>
     </div>
     <div class="reviews__grid fade-up">
       <div class="review-card">
         <div class="review-card__stars">★★★★★</div>
-        <p class="review-card__text">«Взяли котёнка "под ключ" — кастрированный, приученный к лотку. Мейн-куны — настоящие компаньоны! Уже думаем о втором 😄»</p>
+        <p class="review-card__text">«Забрали котёнка готового „под ключ" — кастрированного, адаптированного и приученного к лотку. Мейнкун — самый настоящий компаньон, не навязчивый, но всегда рядом. Елена подробно рассказала про кормление и уход. Очень советую данный питомник!»</p>
         <div class="review-card__author">
           <div class="review-card__avatar">П</div>
           <div>
             <div class="review-card__name">Паша Павлов</div>
-            <div class="review-card__city">Москва · апрель 2025</div>
+            <div class="review-card__city">июль 2025</div>
           </div>
         </div>
       </div>
       <div class="review-card">
         <div class="review-card__stars">★★★★★</div>
-        <p class="review-card__text">«Очень ответственный заводчик. Елена всё подробно объяснила, котёнок перевёз отлично. Здоровый, привитый, ласковый — всё как обещали!»</p>
+        <p class="review-card__text">«Оценка 5 из 5. Рекомендую питомник Maclen!»</p>
         <div class="review-card__author">
           <div class="review-card__avatar">К</div>
           <div>
@@ -383,20 +424,9 @@
           </div>
         </div>
       </div>
-      <div class="review-card">
-        <div class="review-card__stars">★★★★★</div>
-        <p class="review-card__text">«Наш Гарфилд уже полтора месяца украшает нашу жизнь. Большой, пушистый и очень любопытный. Спасибо питомнику Maclen за счастье!»</p>
-        <div class="review-card__author">
-          <div class="review-card__avatar">Н</div>
-          <div>
-            <div class="review-card__name">Наталья</div>
-            <div class="review-card__city">Ижевск</div>
-          </div>
-        </div>
-      </div>
     </div>
     <div class="reviews__cta fade-up">
-      <a href="https://vk.com/topic-225204095_49728637" target="_blank" class="btn btn-outline">Все отзывы во ВКонтакте →</a>
+      <a href="https://vk.com/reviews-225204095" target="_blank" class="btn btn-outline">Все отзывы во ВКонтакте →</a>
     </div>
   </div>
 </section>
@@ -513,11 +543,11 @@
       <div class="form-card fade-up">
         <h3>Оставить заявку</h3>
         <form
-          action="https://formsubmit.co/matrosova67@internet.ru"
+          action="https://formsubmit.co/max.ivsh.220596@yandex.ru"
           method="POST"
           id="leadForm">
           <input type="hidden" name="_subject" value="Новая заявка с сайта maclen.ru">
-          <input type="hidden" name="_next" value="https://maclen.ru/thanks.html">
+          <input type="hidden" name="_next" value="https://maclen-website.vercel.app/thanks.html">
           <input type="hidden" name="_captcha" value="false">
           <input type="hidden" name="_template" value="box">
 
@@ -552,7 +582,9 @@
   <div class="container">
     <div class="footer__inner">
       <div>
-        <div class="footer__brand-name">🐾 Maclen</div>
+        <div class="footer__brand-name">
+          <img src="/images/logo.jpg" alt="Maclen" class="nav__logo-img" style="width: 32px; height: 32px;"> Maclen
+        </div>
         <div class="footer__brand-desc">Семейный питомник мейн-кунов в Ижевске.<br>Котята с родословной WCF · Доставка по всей России.</div>
         <div class="footer__socials">
           <a href="https://vk.com/maclen" target="_blank" class="footer__social" title="ВКонтакте">📘</a>
@@ -580,7 +612,7 @@
         <div class="footer__contact-item">📍 Ижевск, Удмуртия</div>
         <div style="margin-top:1rem">
           <div class="footer__col-title">Сертификация</div>
-          <div style="font-size:.82rem;color:rgba(255,255,255,.5)">Зарегистрирован в системе WCF<br>Все производители с родословными</div>
+          <div style="font-size:.82rem;color:rgba(255,255,255,.5)">Зарегистрирован в WCF (№ 49185-2025 от 04.02.25)<br>Все производители с родословными<br>В породе с 2022 года</div>
         </div>
       </div>
     </div>
