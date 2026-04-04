@@ -106,6 +106,18 @@ app.post('/api/vk-webhook', async (req, res) => {
 
       if (!text || text.trim() === '') return;
 
+      // ФОРСИРУЕМ ПЕРЕЗАПРОС СООБЩЕНИЯ (ВК Webhook обрезает массив!)
+      try {
+          const fetchMsgRes = await fetch(`https://api.vk.com/method/messages.getById?message_ids=${message.id}&group_id=${req.body.group_id}&access_token=${VK_TOKEN}&v=${VK_API_V}`);
+          const fetchMsgData = await fetchMsgRes.json();
+          if (fetchMsgData.response && fetchMsgData.response.items && fetchMsgData.response.items.length > 0) {
+              const fullMsg = fetchMsgData.response.items[0];
+              if (fullMsg.attachments && fullMsg.attachments.length > attachments.length) {
+                  attachments = fullMsg.attachments; // Перезаписываем обрезанный массив полным
+              }
+          }
+      } catch(e) { console.error('Refetch err:', e); }
+
     try {
       console.log('Got message to auto-process:', text);
       const group_id = req.body.group_id;
