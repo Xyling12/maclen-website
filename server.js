@@ -73,37 +73,36 @@ app.post('/api/submit', async (req, res) => {
 app.post('/api/vk-webhook', async (req, res) => {
   const AITUNNEL_KEY = process.env.AITUNNEL_KEY || 'sk-aitunnel-GEhq2XTu9QmIrrOZe2S1Di2WAdp7yQ0C';
   const VK_CONFIRMATION_CODE = process.env.VK_CONFIRMATION_CODE || '9ed5321c';
-  // Если захотите повысить безопасность, можете проверять req.body.secret === 'aaQ13axAPQEcczQa'
   
-  // 1. Подтверждение сервера Callback API
   if (req.body.type === 'confirmation') {
     return res.send(VK_CONFIRMATION_CODE);
   }
 
-  // 2. Обработка нового сообщения (от Елены)
   if (req.body.type === 'message_new') {
-    // ВКонтакте требует сразу вернуть 'ok', иначе будет слать дубли сообщений
     res.send('ok');
 
     const message = req.body.object.message || req.body.object;
     const text = message.text;
     const attachments = message.attachments;
 
-    // Если нет текста, ничего не генерируем
     if (!text || text.trim() === '') return;
 
     try {
       console.log('Got message to auto-process:', text);
+      const group_id = req.body.group_id;
       
-      // 3. Генерация поста через AI (AITunnel)
       const prompt = `Ты — профессиональный SMM-маркетолог элитного питомника мейн-кунов. 
-Тебе дали сухие факты о котенке: "${text}".
-Напиши ОДИН очень красивый, эмоциональный и душевный пост для стены ВКонтакте об этом котенке, чтобы его захотели купить.
-Используй переносы строк и релевантные эмодзи.
-В конце добавь призыв написать в ЛС группы для бронирования.
-И добавь хештеги: #мейнкунижевск #питомникмейнкунов #купитьмейнкуна #мейнкункотята`;
+Тебе дали факты о котенке: "${text}".
+Твоя задача — вернуть СТРОГИЙ JSON без markdown разметки (\`\`\`json). Верни только объект.
+Структура:
+{
+  "postText": "Эмоциональный пост для стены ВКонтакте с эмодзи и хештегами",
+  "marketTitle": "Название карточки товара (например: Котенок Энцо (окрас n22)). Заголовок до 100 символов.",
+  "marketDescription": "Официальное описание для карточки товара (без хештегов).",
+  "price": 0
+}
+Важно: Если в тексте указана цена в рублях, запиши ее числом в поле price. Если цены нет или она не понятна, укажи 0. Верни исключительно чистый JSON.`;
 
-      // Endpoint AITunnel (обычно он совместим с форматом OpenAI v1)
       const aiRes = await fetch('https://api.aitunnel.ru/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -111,7 +110,7 @@ app.post('/api/vk-webhook', async (req, res) => {
           'Authorization': `Bearer ${AITUNNEL_KEY}`
         },
         body: JSON.stringify({
-          model: 'gpt-4o-mini', // или любая модель, доступная в вашей подписке AITunnel
+          model: 'gpt-4o-mini', 
           messages: [{ role: 'user', content: prompt }],
           temperature: 0.7
         })
@@ -122,49 +121,127 @@ app.post('/api/vk-webhook', async (req, res) => {
           throw new Error('AI Generate failed: ' + JSON.stringify(aiData));
       }
       
-      const generatedPostText = aiData.choices[0].message.content;
-      console.log('AI Generated text length:', generatedPostText.length);
+      let aiResponseText = aiData.choices[0].message.content;
+      // Очистка от возможных маркдаун тегов
+      aiResponseText = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const parsedData = JSON.parse(aiResponseText);
+      
+      const { postText, marketTitle, marketDescription, price } = parsedData;
 
-      // 4. Подхватываем видео и фото из сообщения Елены, чтобы прикрепить к будущему посту
+      let vkAttachmentString = null;
       const vkAttachmentsArr = [];
+      let mainPhotoUrl = null;
+
       if (attachments && attachments.length > 0) {
         for (const att of attachments) {
           if (att.type === 'video') {
             vkAttachmentsArr.push(`video${att.video.owner_id}_${att.video.id}`);
           } else if (att.type === 'photo') {
             vkAttachmentsArr.push(`photo${att.photo.owner_id}_${att.photo.id}`);
+            // Выбираем самое большое разрешение для обложки товара
+            if (!mainPhotoUrl) {
+              const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
+              mainPhotoUrl = bestSize.url;
+            }
           }
         }
       }
-      const vkAttachmentString = vkAttachmentsArr.join(',') || null;
 
-      // 5. Публикуем готовый пост на стене от имени группы
+      // СОЗДАНИЕ ТОВАРА В МАРКЕТЕ (если есть цена и обложка)
+      let marketItemAttachment = null;
+      let marketCreated = false;
+
+      if (price > 0 && mainPhotoUrl) {
+        try {
+           console.log('Price detected, initiating Market upload...');
+           // Динамическое получение категории "Животные/Кошки"
+           let targetCategoryId = 1;
+           const catRes = await fetch(`https://api.vk.com/method/market.getCategories?count=1000&access_token=${VK_TOKEN}&v=${VK_API_V}`);
+           const catData = await catRes.json();
+           if (catData.response && catData.response.items) {
+             const cat = catData.response.items.find(c => c.name.includes('Животн') || c.name.includes('Кошк') || c.name.includes('Питомц'));
+             targetCategoryId = cat ? cat.id : catData.response.items[0].id;
+           }
+
+           // 1. Получаем сервер загрузки
+           let uploadUrlRes = await fetch(`https://api.vk.com/method/photos.getMarketUploadServer?group_id=${group_id}&main_photo=1&access_token=${VK_TOKEN}&v=${VK_API_V}`);
+           let uploadUrlData = await uploadUrlRes.json();
+           let uploadUrl = uploadUrlData.response.upload_url;
+
+           // 2. Скачиваем фото в Blob
+           let imgRes = await fetch(mainPhotoUrl);
+           let imgBlob = await imgRes.blob();
+
+           // 3. Отправляем фото
+           const formData = new FormData();
+           formData.append('file', imgBlob, 'cover.jpg');
+           let uploadedRes = await fetch(uploadUrl, { method: 'POST', body: formData });
+           let uploadedData = await uploadedRes.json();
+
+           // 4. Сохраняем фото в товарах
+           let saveQ = new URLSearchParams({
+             group_id: group_id,
+             photo: uploadedData.photo,
+             server: uploadedData.server,
+             hash: uploadedData.hash,
+             crop_data: uploadedData.crop_data,
+             crop_hash: uploadedData.crop_hash,
+             access_token: VK_TOKEN,
+             v: VK_API_V
+           });
+           let savedPhotoRes = await fetch(`https://api.vk.com/method/photos.saveMarketPhoto`, { method: 'POST', body: saveQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
+           let savedPhotoData = await savedPhotoRes.json();
+           let photoId = savedPhotoData.response[0].id;
+
+           // 5. Создаем сам товар
+           let addMarketQ = new URLSearchParams({
+             owner_id: `-${group_id}`,
+             name: marketTitle || 'Котенок Maclen',
+             description: marketDescription || 'Описание котенка',
+             category_id: targetCategoryId,
+             price: price,
+             main_photo_id: photoId,
+             access_token: VK_TOKEN,
+             v: VK_API_V
+           });
+           let addedMarketRes = await fetch(`https://api.vk.com/method/market.add`, { method: 'POST', body: addMarketQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
+           let addedMarketData = await addedMarketRes.json();
+           
+           if (addedMarketData.response && addedMarketData.response.market_item_id) {
+               marketCreated = true;
+               marketItemAttachment = `market-${group_id}_${addedMarketData.response.market_item_id}`;
+               // Прикрепляем свежесозданный товар к массиву вложений поста
+               vkAttachmentsArr.push(marketItemAttachment);
+           } else {
+               console.error('Market Add Error:', addedMarketData);
+           }
+        } catch (e) {
+          console.error("Market creation error: ", e);
+        }
+      }
+
+      vkAttachmentString = vkAttachmentsArr.join(',') || null;
+
+      // ПУБЛИКАЦИЯ НА СТЕНУ
       const wallQuery = new URLSearchParams({
-        owner_id: `-${req.body.group_id}`,
+        owner_id: `-${group_id}`,
         from_group: '1',
-        message: generatedPostText,
+        message: postText,
         access_token: VK_TOKEN,
         v: VK_API_V
       });
-      // Если было видео, прикрепляем его к посту
-      if (vkAttachmentString) {
-        wallQuery.append('attachments', vkAttachmentString);
-      }
+      if (vkAttachmentString) wallQuery.append('attachments', vkAttachmentString);
 
       const postRes = await fetch('https://api.vk.com/method/wall.post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: wallQuery.toString()
       });
-      
       const postResponseData = await postRes.json();
-      console.log('Post Wall Response:', postResponseData);
 
-      // 6. Отвечаем Елене в личку, что все прошло успешно
-      let reportMessage = '✨ Готово! Красивый продающий пост о котенке успешно сгенерирован и опубликован на стене группы.';
-      if (postResponseData.error) {
-         reportMessage = '❌ Ошибка публикации: ' + postResponseData.error.error_msg;
-      }
+      let reportMessage = '✨ Пост успешно опубликован на стене!';
+      if (marketCreated) reportMessage += '\n🛍 Карточка товара успешно создана!';
+      if (postResponseData.error) reportMessage = '❌ Ошибка публикации: ' + postResponseData.error.error_msg;
 
       const replyQuery = new URLSearchParams({
         user_id: message.peer_id,
@@ -173,21 +250,13 @@ app.post('/api/vk-webhook', async (req, res) => {
         access_token: VK_TOKEN,
         v: VK_API_V
       });
-      
-      await fetch('https://api.vk.com/method/messages.send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: replyQuery.toString()
-      });
+      await fetch('https://api.vk.com/method/messages.send', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: replyQuery.toString() });
 
     } catch (err) {
-      console.error('VK Webhook AI error:', err);
-      // Можно отправить Елене уведомление об ошибке
+      console.error('VK Webhook error:', err);
     }
     return;
   }
-
-  // Для остальных системных событий (например, печать)
   res.send('ok');
 });
 
