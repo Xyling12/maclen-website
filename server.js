@@ -197,10 +197,10 @@ app.post('/api/vk-webhook', async (req, res) => {
            if (savedPhotoData.error) throw new Error('SavePhoto API: ' + JSON.stringify(savedPhotoData.error));
            let photoId = savedPhotoData.response[0].id;
 
-           // Извлекаем ID видео для прикрепления внутрь карточки товара
+           // Извлекаем целочисленные ID видео для прикрепления внутрь карточки товара
            const marketVideoIds = [];
            for (const att of attachments || []) {
-             if (att.type === 'video') marketVideoIds.push(`${att.video.owner_id}_${att.video.id}`);
+             if (att.type === 'video') marketVideoIds.push(att.video.id);
            }
 
            let addMarketQ = new URLSearchParams({
