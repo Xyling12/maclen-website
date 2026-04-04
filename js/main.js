@@ -4,7 +4,10 @@
    ============================================================ */
 
 // ------ CONFIG ------
-const VK_OWNER_ID_ELENA  = 694180609;   // Elena's personal profile
+(function() {
+  'use strict';
+
+  const VK_OWNER_ID_ELENA  = 694180609;   // Elena's personal profile
 const VK_OWNER_ID_GROUP  = -225204095;  // @maclen group
 const VK_API_V            = '5.131';
 
@@ -20,9 +23,16 @@ const burgerBtn  = document.getElementById('burgerBtn');
 const mobileNav  = document.getElementById('mobileNav');
 const navClose   = document.getElementById('navClose');
 
+let isScrolling = false;
 window.addEventListener('scroll', () => {
-  nav.classList.toggle('scrolled', window.scrollY > 40);
-});
+  if (!isScrolling) {
+    window.requestAnimationFrame(() => {
+      if (nav) nav.classList.toggle('scrolled', window.scrollY > 40);
+      isScrolling = false;
+    });
+    isScrolling = true;
+  }
+}, { passive: true });
 
 burgerBtn?.addEventListener('click', () => {
   mobileNav.classList.add('open');
@@ -200,6 +210,56 @@ async function vkCall(method, params = {}) {
   }
 }
 
+// ====================================================
+// VK POST MODAL
+// ====================================================
+window.openPostModal = function(index) {
+  const post = window.VK_POSTS && window.VK_POSTS[index];
+  if (!post) return;
+  const container = document.getElementById('postModalContainer');
+  
+  if (post.isVideo) {
+    container.style.aspectRatio = '16/9';
+    container.innerHTML = `<iframe src="https://vk.com/video_ext.php?oid=${post.videoOwnerId}&id=${post.videoId}&hd=2" width="100%" height="100%" frameborder="0" allowfullscreen></iframe>`;
+  } else {
+    container.style.aspectRatio = 'auto';
+
+    // Format text beautifully for mobile reading
+    const formattedText = (post.text || '')
+      .split('\n\n')
+      .map(p => p.trim())
+      .filter(p => p.length > 0)
+      .map(p => `<p style="margin-bottom: 1.25rem;">${p.replace(/\n/g, '<br>')}</p>`)
+      .join('');
+
+    container.innerHTML = `
+      <div style="display:flex; flex-direction:column; max-height:85vh; background:#fff; overflow-y:auto; overflow-x:hidden;">
+        ${post.img ? `<img src="${post.img}" style="width:100%; max-height:50vh; object-fit:cover; background:#f4f4f4; border-bottom:1px solid #eee;">` : ''}
+        <div style="padding: 1.5rem 1.25rem; color:#222; font-size:1.05rem; line-height:1.7; font-family:var(--font-sans);">
+          <div style="color:var(--text-light); font-size:0.875rem; margin-bottom:1.5rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">${formatDate(post.date)}</div>
+          <div style="color:#222;">
+            ${post.text ? formattedText : ''}
+          </div>
+          <div style="margin-top:0.5rem; padding-top:1.5rem; border-top: 1px solid #eee;">
+            <a href="${post.url}" target="_blank" style="display:inline-flex; align-items:center; gap:0.5rem; color:white; background:var(--green); font-weight:600; padding:12px 20px; border-radius:8px; text-decoration:none; box-shadow:0 4px 10px rgba(84,113,83,0.3); transition: transform 0.2s;">
+              <span>Открыть в ВКонтакте</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  document.getElementById('postModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closePostModal = function() {
+  document.getElementById('postModal').classList.remove('active');
+  document.getElementById('postModalContainer').innerHTML = '';
+  document.body.style.overflow = '';
+};
+
 // ============================================================
 // KITTENS — VK Market
 // ============================================================
@@ -209,8 +269,9 @@ const FALLBACK_KITTENS = [
   { name: 'Эклипс', details: 'Кот · 5 месяцев', status: 'free', img: '/images/cat5.webp', vkUrl: 'https://vk.com/maclen' },
 ];
 
-function renderKittenCard(k) {
-  const waText = encodeURIComponent(`Здравствуйте! Интересует котёнок ${k.name}. Расскажите подробнее.`);
+let globalKittensData = [];
+
+function renderKittenCard(k, i) {
   const statusLabel = k.status === 'free' ? 'Свободен' : 'Забронирован';
   const statusClass = k.status === 'free' ? 'free' : 'reserved';
   return `
@@ -219,16 +280,17 @@ function renderKittenCard(k) {
         <img src="${k.img}" alt="${k.name} — мейн-кун, питомник Maclen Ижевск"
              onerror="this.src='https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&q=80';this.onerror=null"
              loading="lazy">
+        ${k.videoIframeUrl ? '<div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Видео</div>' : ''}
         <span class="kitten-card__status kitten-card__status--${statusClass}">${statusLabel}</span>
       </div>
       <div class="kitten-card__body">
         <div class="kitten-card__name display">${k.name}</div>
         <div class="kitten-card__details">${k.details}</div>
-        <div class="kitten-card__actions">
-          <a href="https://wa.me/79127570136?text=${waText}" target="_blank" class="btn btn-primary">
+        <div class="kitten-card__actions" style="flex-direction: column; display: flex; gap: 0.5rem;">
+          <button onclick="openKittenModal(${i})" class="btn btn-primary" style="cursor:pointer; width: 100%; justify-content: center;">
             Узнать подробности
-          </a>
-          <a href="${k.vkUrl}" target="_blank" class="btn btn-outline">В ВК →</a>
+          </button>
+          <button onclick="bookKitten(${i})" class="btn btn-outline" style="cursor:pointer; width: 100%; justify-content: center;">Оставить заявку</button>
         </div>
       </div>
     </div>`;
@@ -240,34 +302,189 @@ async function loadKittens() {
 
   let kittens = null;
 
-  if (VK_TOKEN) {
-    const res = await vkCall('market.get', {
-      owner_id: VK_OWNER_ID_GROUP,
-      count: 9,
-      extended: 1,
-    });
-    if (res && res.items && res.items.length) {
-      kittens = res.items.map(item => ({
-        name: item.title,
-        price: item.price?.text || 'Уточните цену',
-        details: stripEmoji(item.description).slice(0, 80) || 'Мейн-кун · питомник Maclen',
-        status: item.availability === 0 ? 'free' : 'reserved',
-        img: getBestPhoto(item.photos?.[0]?.sizes) || '',
-        vkUrl: `https://vk.com/market/product/${Math.abs(VK_OWNER_ID_GROUP)}-${item.id}`,
-      }));
+  try {
+    const res = await fetch('/api/market');
+    const data = await res.json();
+    
+    if (data && data.items && data.items.length) {
+      kittens = data.items.map(item => {
+        let photos = [item.thumb_photo];
+        if (item.photos && item.photos.length > 0) {
+           photos = item.photos.map(p => getBestPhoto(p.sizes) || item.thumb_photo);
+        }
+        
+        return {
+          name: item.title,
+          price: item.price?.text || 'Уточните цену',
+          details: item.description ? truncate(item.description, 60) : 'Мейн-кун',
+          longDesc: item.description || 'Нет подробного описания',
+          status: item.availability === 0 ? 'free' : 'reserved',
+          img: item.thumb_photo || '/images/cat_placeholder.jpg',
+          photos: photos,
+          videoIframeUrl: item.videoIframeUrl || null,
+          vkUrl: item.market_url || `https://vk.com/maclen`
+        };
+      });
+
+      // Dynamically update Hero Collage with real kittens if available
+      const heroImgs = document.querySelectorAll('.hero__circle img');
+      if (heroImgs && heroImgs.length > 0) {
+        kittens.slice(0, heroImgs.length).forEach((k, idx) => {
+          if (k.img) {
+            heroImgs[idx].src = k.img;
+            heroImgs[idx].alt = k.name;
+          }
+        });
+      }
     }
+  } catch (err) {
+    console.warn('Failed to load market items:', err);
   }
 
-  if (!kittens) kittens = FALLBACK_KITTENS;
+  if (!kittens) kittens = FALLBACK_KITTENS.map(k => ({...k, photos: [k.img], longDesc: k.details, price: 'По запросу'}));
+  
+  globalKittensData = kittens;
 
-  grid.innerHTML = kittens.map(renderKittenCard).join('');
-  // Re-observe new elements for fade-in
-  grid.querySelectorAll('.kitten-card').forEach((el, i) => {
-    el.style.animationDelay = `${i * 0.1}s`;
+  grid.innerHTML = kittens.map((k, i) => renderKittenCard(k, i)).join('');
+  grid.querySelectorAll('.kitten-card').forEach(el => {
     el.classList.add('fade-up');
     observer.observe(el);
   });
 }
+
+window.openKittenModal = function(index) {
+  const k = globalKittensData[index];
+  if (!k) return;
+
+  document.getElementById('kModalName').innerText = k.name;
+  document.getElementById('kModalPrice').innerText = k.price;
+  document.getElementById('kModalStatus').innerText = k.status === 'free' ? 'Свободен' : 'Забронирован';
+  document.getElementById('kModalStatus').style.color = k.status === 'free' ? 'var(--green)' : 'var(--text-muted)';
+  document.getElementById('kModalDesc').innerText = k.longDesc;
+  
+  const mainImgContainer = document.getElementById('kModalMainImg').parentElement;
+  if (k.videoIframeUrl) {
+      if (!document.getElementById('kModalVideoFrame')) {
+          const iframe = document.createElement('iframe');
+          iframe.id = 'kModalVideoFrame';
+          iframe.style.width = '100%';
+          iframe.style.height = '100%';
+          iframe.style.position = 'absolute';
+          iframe.style.top = '0';
+          iframe.style.left = '0';
+          iframe.style.border = 'none';
+          iframe.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+          mainImgContainer.appendChild(iframe);
+      }
+      document.getElementById('kModalVideoFrame').src = k.videoIframeUrl;
+      document.getElementById('kModalVideoFrame').style.display = 'block';
+      document.getElementById('kModalMainImg').style.display = 'none';
+  } else {
+      if (document.getElementById('kModalVideoFrame')) {
+          document.getElementById('kModalVideoFrame').style.display = 'none';
+          document.getElementById('kModalVideoFrame').src = '';
+      }
+      document.getElementById('kModalMainImg').style.display = 'block';
+      document.getElementById('kModalMainImg').src = k.photos[0];
+  }
+
+  const thumbsContainer = document.getElementById('kModalThumbs');
+  thumbsContainer.innerHTML = '';
+  
+  if (k.videoIframeUrl) {
+    const vThumbWrapper = document.createElement('div');
+    vThumbWrapper.style.position = 'relative';
+    vThumbWrapper.style.cursor = 'pointer';
+    vThumbWrapper.style.width = '60px'; // Matching CSS thumb width roughly
+    vThumbWrapper.style.height = '60px';
+    
+    const vImg = document.createElement('img');
+    vImg.src = k.photos[0]; // Use first photo as video thumbnail background
+    vImg.style.width = '100%';
+    vImg.style.height = '100%';
+    vImg.style.objectFit = 'cover';
+    vImg.style.borderRadius = '6px';
+    vImg.classList.add('active'); // active by default if video present
+    
+    // Play overlay icon
+    const playIcon = document.createElement('div');
+    playIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>`;
+    playIcon.style.position = 'absolute';
+    playIcon.style.top = '50%';
+    playIcon.style.left = '50%';
+    playIcon.style.transform = 'translate(-50%, -50%)';
+    playIcon.style.background = 'rgba(0,0,0,0.5)';
+    playIcon.style.borderRadius = '50%';
+    playIcon.style.padding = '8px';
+    playIcon.style.display = 'flex';
+    playIcon.style.pointerEvents = 'none';
+
+    vThumbWrapper.appendChild(vImg);
+    vThumbWrapper.appendChild(playIcon);
+    
+    vThumbWrapper.onclick = () => {
+       document.getElementById('kModalMainImg').style.display = 'none';
+       document.getElementById('kModalVideoFrame').style.display = 'block';
+       document.getElementById('kModalVideoFrame').src = k.videoIframeUrl;
+       
+       thumbsContainer.querySelectorAll('img').forEach(i => i.classList.remove('active'));
+       vImg.classList.add('active');
+    };
+    thumbsContainer.appendChild(vThumbWrapper);
+  }
+
+  k.photos.forEach((src, idx) => {
+    const img = document.createElement('img');
+    img.src = src;
+    img.loading = 'lazy';
+    if (idx === 0 && !k.videoIframeUrl) img.classList.add('active');
+    
+    img.onclick = () => {
+      if (document.getElementById('kModalVideoFrame')) {
+          document.getElementById('kModalVideoFrame').style.display = 'none';
+          document.getElementById('kModalVideoFrame').src = ''; // stop audio
+      }
+      document.getElementById('kModalMainImg').style.display = 'block';
+      document.getElementById('kModalMainImg').src = src;
+      
+      thumbsContainer.querySelectorAll('img').forEach(i => i.classList.remove('active'));
+      img.classList.add('active');
+    };
+    thumbsContainer.appendChild(img);
+  });
+
+  const modal = document.getElementById('kittenModal');
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeKittenModal = function() {
+  document.getElementById('kittenModal').classList.remove('active');
+  document.body.style.overflow = '';
+  if (document.getElementById('kModalVideoFrame')) {
+      document.getElementById('kModalVideoFrame').src = ''; // stop audio playback
+  }
+};
+
+window.bookKitten = function(index) {
+  const k = globalKittensData[index];
+  if (!k) return;
+  const wishesField = document.getElementById('wishes');
+  if (wishesField) {
+    wishesField.value = 'Интересует котенок: ' + k.name;
+  }
+  window.location.hash = '#contacts';
+};
+
+window.bookFromModal = function() {
+  window.closeKittenModal();
+  const name = document.getElementById('kModalName').innerText;
+  const wishesField = document.getElementById('wishes');
+  if (wishesField) {
+    wishesField.value = 'Интересует котенок: ' + name;
+  }
+  window.location.hash = '#contacts';
+};
 
 // ============================================================
 // BLOG — VK Wall (Elena's profile)
@@ -281,23 +498,32 @@ const FALLBACK_POSTS = [
   { date: 1708400000, text: '🌟 Питание мейн-куна — самый частый вопрос! Кормим цельным сухим кормом + натуральные добавки.', img: '/images/cat6.webp', url: 'https://vk.com/id694180609' },
 ];
 
-function renderBlogCard(post) {
+function renderBlogCard(post, index) {
   const hasImg = post.img && post.img.length > 0;
   const cleanText = stripEmoji(post.text || '');
+  const linkText = post.isVideo ? 'Смотреть видео' : 'Читать полностью';
+  
+  const linkAction = `onclick="openPostModal(${index}); return false;"`;
+
+  const imgContent = hasImg
+    ? `<a href="${post.url}" ${linkAction} style="display: block; position: relative; width: 100%; height: 100%; text-decoration: none; cursor: pointer;">
+         <img src="${post.img}" alt="Новости питомника Maclen мейн-кун Ижевск"
+              onerror="this.parentElement.innerHTML='<span class=&quot;blog-card__img-placeholder&quot;>🐾</span>';this.onerror=null"
+              loading="lazy" style="width:100%;height:100%;object-fit:cover;">
+         ${post.isVideo ? `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.6);border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;padding-left:6px;transition:0.2s;">▶</div>` : ''}
+         ${!post.isVideo && post.is_pinned ? `<div style="position:absolute;top:10px;right:10px;background:var(--green);color:white;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;box-shadow:0 2px 5px rgba(0,0,0,0.2);">📌 Закреплено</div>` : ''}
+       </a>`
+    : '<span class="blog-card__img-placeholder">🐾</span>';
+
   return `
     <div class="blog-card">
       <div class="blog-card__img">
-        ${hasImg
-          ? `<img src="${post.img}" alt="Новости питомника Maclen мейн-кун Ижевск"
-                  onerror="this.parentElement.innerHTML='<span class=\\"blog-card__img-placeholder\\">🐾</span>';this.onerror=null"
-                  loading="lazy">`
-          : '<span class="blog-card__img-placeholder">🐾</span>'
-        }
+        ${imgContent}
       </div>
       <div class="blog-card__body">
         <div class="blog-card__date">${formatDate(post.date)}</div>
-        <div class="blog-card__text">${truncate(cleanText, 180)}</div>
-        <a href="${post.url}" target="_blank" class="blog-card__link">Читать в ВКонтакте →</a>
+        ${cleanText ? `<div class="blog-card__text">${truncate(cleanText, 180)}</div>` : ''}
+        <a href="#" ${linkAction} class="blog-card__link" style="margin-top:auto;">${linkText}</a>
       </div>
     </div>`;
 }
@@ -308,31 +534,54 @@ async function loadBlog() {
 
   let posts = null;
 
-  if (VK_TOKEN) {
-    // Try Elena's personal wall first
-    const res = await vkCall('wall.get', {
-      owner_id: VK_OWNER_ID_ELENA,
-      count: 6,
-      filter: 'owner',
-    });
-    if (res && res.items && res.items.length) {
-      posts = res.items
-        .filter(p => p.text && p.text.length > 20)
-        .slice(0, 6)
-        .map(p => ({
-          date: p.date,
-          text: p.text,
-          img: p.attachments
-            ? getBestPhoto(p.attachments.find(a => a.type === 'photo')?.photo?.sizes)
-            : null,
-          url: `https://vk.com/id${VK_OWNER_ID_ELENA}?w=wall${VK_OWNER_ID_ELENA}_${p.id}`,
-        }));
+  try {
+    const res = await fetch('/api/wall');
+    const data = await res.json();
+    if (data && data.items && data.items.length) {
+      posts = data.items
+        .filter(p => (p.text && p.text.length > 5) || (p.attachments && p.attachments.length > 0))
+        .map(p => {
+          let photoUrl = null;
+          let isVideo = false;
+          let videoOwnerId = null;
+          let videoId = null;
+          if (p.attachments) {
+            const photoAtt = p.attachments.find(a => a.type === 'photo');
+            if (photoAtt && photoAtt.photo && photoAtt.photo.sizes) {
+              photoUrl = getBestPhoto(photoAtt.photo.sizes);
+            } else {
+              // Video thumbnail fallback
+              const videoAtt = p.attachments.find(a => a.type === 'video');
+              if (videoAtt && videoAtt.video && videoAtt.video.image) {
+                photoUrl = videoAtt.video.image[videoAtt.video.image.length - 1].url;
+                isVideo = true;
+                videoOwnerId = videoAtt.video.owner_id;
+                videoId = videoAtt.video.id;
+              }
+            }
+          }
+          return {
+            date: p.date,
+            text: p.text || '',
+            img: photoUrl,
+            isVideo: isVideo,
+            is_pinned: p.is_pinned === 1,
+            videoOwnerId: videoOwnerId,
+            videoId: videoId,
+            url: `https://vk.com/maclen?w=wall-225204095_${p.id}`,
+          };
+        })
+        .sort((a, b) => (b.is_pinned === true ? 1 : 0) - (a.is_pinned === true ? 1 : 0))
+        .slice(0, 6);
     }
+  } catch (err) {
+    console.warn('Failed to load wall items:', err);
   }
 
-  if (!posts) posts = FALLBACK_POSTS;
+  if (!posts || posts.length === 0) posts = FALLBACK_POSTS;
+  window.VK_POSTS = posts;
 
-  grid.innerHTML = posts.map(renderBlogCard).join('');
+  grid.innerHTML = posts.map((post, index) => renderBlogCard(post, index)).join('');
   grid.querySelectorAll('.blog-card').forEach(el => {
     el.classList.add('fade-up');
     observer.observe(el);
@@ -348,11 +597,58 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ============================================================
-// FORM: confirmation toast
+// FORM: API submission
 // ============================================================
-document.getElementById('leadForm')?.addEventListener('submit', function(e) {
+document.getElementById('leadForm')?.addEventListener('submit', async function(e) {
+  e.preventDefault();
   const btn = this.querySelector('.form-submit');
+  const originalText = btn.textContent;
   btn.textContent = 'Отправляем…';
   btn.disabled = true;
-  // FormSubmit handles redirect to thanks.html
+
+  try {
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData.entries());
+
+    const res = await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    if (res.ok) {
+      btn.textContent = 'Заявка отправлена! ✨';
+      btn.classList.add('success');
+      this.reset();
+    } else {
+      throw new Error('Server error');
+    }
+  } catch (err) {
+    btn.textContent = 'Ошибка. Попробуйте позже';
+    btn.disabled = false;
+    setTimeout(() => { btn.textContent = originalText; }, 3000);
+  }
 });
+
+// ============================================================
+// FORM: Phone mask
+// ============================================================
+const phoneInput = document.getElementById('phone');
+if (phoneInput) {
+  phoneInput.addEventListener('input', function (e) {
+    let x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+    if (!x[2] && x[1] !== '') {
+      e.target.value = '+7';
+    } else {
+      e.target.value = '+7' + (x[2] ? ' (' + x[2] : '') + (x[3] ? ') ' + x[3] : '') + (x[4] ? '-' + x[4] : '') + (x[5] ? '-' + x[5] : '');
+    }
+  });
+
+  phoneInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Backspace' && e.target.value.length <= 4) {
+      e.target.value = '';
+    }
+  });
+}
+
+})();
