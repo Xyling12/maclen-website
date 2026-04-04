@@ -193,7 +193,10 @@ app.post('/api/vk-webhook', async (req, res) => {
            const catRes = await fetch(`https://api.vk.com/method/market.getCategories?count=1000&access_token=${ACTIVE_TOKEN}&v=${VK_API_V}`);
            const catData = await catRes.json();
            if (catData.response && catData.response.items) {
-             const cat = catData.response.items.find(c => c.name.includes('Животн') || c.name.includes('Кошк') || c.name.includes('Питомц'));
+             const cat = catData.response.items.find(c => {
+                 const n = c.name.toLowerCase();
+                 return n.includes('животн') || n.includes('кошк') || n.includes('питомц') || n.includes('домашн');
+             });
              targetCategoryId = cat ? cat.id : catData.response.items[0].id;
            }
 
