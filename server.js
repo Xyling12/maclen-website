@@ -320,7 +320,8 @@ app.post('/api/vk-webhook', async (req, res) => {
       if (postResponseData.error) reportMessage = '❌ Ошибка публикации: ' + postResponseData.error.error_msg;
 
       // ДОБАВЛЯЕМ ОТЛАДОЧНУУ ИНФОРМАЦИЮ ПРЯМО В ОТВЕТ
-      reportMessage += `\n\n[Отладка]: Найдена цена = ${price}. Фото обнаружено = ${photoUrls.length > 0 ? 'Да' : 'Нет'}. Вложений: ${attachments ? attachments.length : 0}`;
+      const typesLog = attachments.map(a => a.type).join(', ');
+      reportMessage += `\n\n[Отладка]: Найдена цена = ${price}. Вложений: ${attachments.length} (${typesLog}).`;
       if (marketDebugLog) {
          reportMessage += `\n⚠️ Ошибка маркета: ${marketDebugLog}`;
       }
