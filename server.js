@@ -159,7 +159,7 @@ app.post('/api/vk-webhook', async (req, res) => {
       console.log('Post Wall Response:', postResponseData);
 
       // 6. Отвечаем Елене в личку, что все прошло успешно
-      let reportMessage = '✅ Шеф, пост успешно сгенерирован и опубликован на стене!';
+      let reportMessage = '✨ Готово! Красивый продающий пост о котенке успешно сгенерирован и опубликован на стене группы.';
       if (postResponseData.error) {
          reportMessage = '❌ Ошибка публикации: ' + postResponseData.error.error_msg;
       }
