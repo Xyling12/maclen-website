@@ -125,16 +125,18 @@ app.post('/api/vk-webhook', async (req, res) => {
       const generatedPostText = aiData.choices[0].message.content;
       console.log('AI Generated text length:', generatedPostText.length);
 
-      // 4. Подхватываем видео из сообщения Елены, чтобы прикрепить к будущему посту
-      let vkAttachmentString = null;
+      // 4. Подхватываем видео и фото из сообщения Елены, чтобы прикрепить к будущему посту
+      const vkAttachmentsArr = [];
       if (attachments && attachments.length > 0) {
-        // Ищем видео среди вложений
-        const videoExt = attachments.find(att => att.type === 'video');
-        if (videoExt) {
-          // Формируем внутреннюю ссылку ВК для прикрепления к посту
-          vkAttachmentString = `video${videoExt.video.owner_id}_${videoExt.video.id}`;
+        for (const att of attachments) {
+          if (att.type === 'video') {
+            vkAttachmentsArr.push(`video${att.video.owner_id}_${att.video.id}`);
+          } else if (att.type === 'photo') {
+            vkAttachmentsArr.push(`photo${att.photo.owner_id}_${att.photo.id}`);
+          }
         }
       }
+      const vkAttachmentString = vkAttachmentsArr.join(',') || null;
 
       // 5. Публикуем готовый пост на стене от имени группы
       const wallQuery = new URLSearchParams({
