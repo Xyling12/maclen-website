@@ -224,8 +224,12 @@ app.post('/api/vk-webhook', async (req, res) => {
            
            if (addedMarketData.response && addedMarketData.response.market_item_id) {
                marketCreated = true;
-               marketItemAttachment = `market-${group_id}_${addedMarketData.response.market_item_id}`;
-               vkAttachmentsArr.push(marketItemAttachment);
+               const marketId = addedMarketData.response.market_item_id;
+               
+               // ВАЖНО: Мы больше не прикрепляем сам товар к стене как виджет (vkAttachmentsArr.push), 
+               // потому что виджет заставляет ВК удалять красивую фотографию из карусели стены.
+               // Вместо этого мы элегантно добавляем ссылку на этот товар в конец текста поста!
+               postText += `\n\n🛍 Подробности и полная карточка котенка: https://vk.com/market-${group_id}?w=product-${group_id}_${marketId}`;
            } else {
                marketDebugLog = JSON.stringify(addedMarketData.error);
                console.error('Market Add Error:', addedMarketData);
