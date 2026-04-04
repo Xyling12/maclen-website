@@ -78,14 +78,33 @@ app.post('/api/vk-webhook', async (req, res) => {
     return res.send(VK_CONFIRMATION_CODE);
   }
 
-  if (req.body.type === 'message_new') {
-    res.send('ok');
+    if (req.body.type === 'message_new') {
+      res.send('ok');
 
-    const message = req.body.object.message || req.body.object;
-    const text = message.text;
-    const attachments = message.attachments;
+      const message = req.body.object.message || req.body.object;
+      
+      // Ищем текст во всех возможных местах
+      let text = message.text || '';
+      if (!text && message.fwd_messages && message.fwd_messages.length > 0) {
+          text = message.fwd_messages[0].text || '';
+      }
+      if (!text && message.reply_message) {
+          text = message.reply_message.text || '';
+      }
 
-    if (!text || text.trim() === '') return;
+      // Собираем вложения из самого сообщения и всех пересланных сообщений
+      let attachments = [];
+      if (message.attachments) attachments = [...message.attachments];
+      if (message.fwd_messages && message.fwd_messages.length > 0) {
+          for (const fmsg of message.fwd_messages) {
+              if (fmsg.attachments) attachments = [...attachments, ...fmsg.attachments];
+          }
+      }
+      if (message.reply_message && message.reply_message.attachments) {
+          attachments = [...attachments, ...message.reply_message.attachments];
+      }
+
+      if (!text || text.trim() === '') return;
 
     try {
       console.log('Got message to auto-process:', text);
@@ -246,7 +265,10 @@ app.post('/api/vk-webhook', async (req, res) => {
       // СОБИРАЕМ КАРУСЕЛЬ НА СТЕНУ (грузим ВСЕ фотки на сервер стены)
       if (photoUrls.length > 0) {
           try {
-              let wallServerRes = await fetch(`https://api.vk.com/method/photos.getWallUploadServer?group_id=${group_id}&access_token=${VK_TOKEN}&v=${VK_API_V}`);
+              const USER_TOKEN = process.env.VK_USER_TOKEN;
+              const ACTIVE_TOKEN = USER_TOKEN || VK_TOKEN;
+
+              let wallServerRes = await fetch(`https://api.vk.com/method/photos.getWallUploadServer?group_id=${group_id}&access_token=${ACTIVE_TOKEN}&v=${VK_API_V}`);
               let wallServerData = await wallServerRes.json();
               if (wallServerData.response && wallServerData.response.upload_url) {
                   let wallUrl = wallServerData.response.upload_url;
@@ -259,7 +281,7 @@ app.post('/api/vk-webhook', async (req, res) => {
                      let uploadedRes = await fetch(wallUrl, { method: 'POST', body: formData });
                      let uploadedData = await uploadedRes.json();
                      
-                     let saveWallQ = new URLSearchParams({ group_id, photo: uploadedData.photo, server: uploadedData.server, hash: uploadedData.hash, access_token: VK_TOKEN, v: VK_API_V });
+                     let saveWallQ = new URLSearchParams({ group_id, photo: uploadedData.photo, server: uploadedData.server, hash: uploadedData.hash, access_token: ACTIVE_TOKEN, v: VK_API_V });
                      let savedWallRes = await fetch(`https://api.vk.com/method/photos.saveWallPhoto`, { method: 'POST', body: saveWallQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
                      let savedWallData = await savedWallRes.json();
                      
@@ -268,6 +290,8 @@ app.post('/api/vk-webhook', async (req, res) => {
                          vkAttachmentsArr.push(`photo${newPhoto.owner_id}_${newPhoto.id}`);
                      }
                   }
+              } else {
+                  console.error('Wall upload server error:', wallServerData);
               }
           } catch(e) { console.error("Wall photo error:", e); }
       }
