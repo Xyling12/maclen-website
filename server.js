@@ -130,7 +130,7 @@ app.post('/api/vk-webhook', async (req, res) => {
       console.log("Safe AI JSON:", aiResponseText);
       const parsedData = JSON.parse(aiResponseText);
       
-      const { postText, marketTitle, marketDescription, price } = parsedData;
+      let { postText, marketTitle, marketDescription, price } = parsedData;
 
       let vkAttachmentString = null;
       const vkAttachmentsArr = [];
