@@ -243,6 +243,9 @@ app.post('/api/vk-webhook', async (req, res) => {
       if (marketCreated) reportMessage += '\n🛍 Карточка товара успешно создана!';
       if (postResponseData.error) reportMessage = '❌ Ошибка публикации: ' + postResponseData.error.error_msg;
 
+      // ДОБАВЛЯЕМ ОТЛАДОЧНУУ ИНФОРМАЦИЮ ПРЯМО В ОТВЕТ
+      reportMessage += `\n\n[Отладка]: Найдена цена = ${price}. Найдено фото = ${mainPhotoUrl ? 'Да' : 'Нет'}. Всего вложений получено от вас: ${attachments ? attachments.length : 0}`;
+
       const replyQuery = new URLSearchParams({
         user_id: message.peer_id,
         message: reportMessage,
@@ -254,6 +257,17 @@ app.post('/api/vk-webhook', async (req, res) => {
 
     } catch (err) {
       console.error('VK Webhook error:', err);
+      // Пытаемся отправить текст ошибки Елене
+      try {
+        const errorQuery = new URLSearchParams({
+          user_id: req.body.object.message ? req.body.object.message.peer_id : req.body.object.peer_id,
+          message: '❌ Ошибка скрипта: ' + err.toString(),
+          random_id: Math.floor(Math.random() * 2000000000),
+          access_token: VK_TOKEN,
+          v: VK_API_V
+        });
+        await fetch('https://api.vk.com/method/messages.send', { method: 'POST', body: errorQuery.toString() });
+      } catch(e) {}
     }
     return;
   }
