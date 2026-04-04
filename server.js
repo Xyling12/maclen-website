@@ -134,7 +134,7 @@ app.post('/api/vk-webhook', async (req, res) => {
 
       let vkAttachmentString = null;
       const vkAttachmentsArr = [];
-      let mainPhotoUrl = null;
+      let photoUrls = [];
 
       if (attachments && attachments.length > 0) {
         for (const att of attachments) {
@@ -142,26 +142,20 @@ app.post('/api/vk-webhook', async (req, res) => {
             const access = att.video.access_key ? `_${att.video.access_key}` : '';
             vkAttachmentsArr.push(`video${att.video.owner_id}_${att.video.id}${access}`);
           } else if (att.type === 'photo') {
-            const access = att.photo.access_key ? `_${att.photo.access_key}` : '';
-            vkAttachmentsArr.push(`photo${att.photo.owner_id}_${att.photo.id}${access}`);
-            // Выбираем самое большое разрешение для обложки товара
-            if (!mainPhotoUrl) {
-              const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
-              mainPhotoUrl = bestSize.url;
-            }
+            const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
+            photoUrls.push(bestSize.url);
           }
         }
       }
 
-      // СОЗДАНИЕ ТОВАРА В МАРКЕТЕ (если есть цена и обложка)
-      let marketItemAttachment = null;
+      // СОЗДАНИЕ ТОВАРА В МАРКЕТЕ С КАРОУСЕЛЬЮ ФОТО
       let marketCreated = false;
       let marketDebugLog = '';
+      let marketId = null;
 
-      if (price > 0 && mainPhotoUrl) {
+      if (price > 0 && photoUrls.length > 0) {
         try {
-           console.log('Price detected, initiating Market upload...');
-           const USER_TOKEN = process.env.VK_USER_TOKEN; // Маркет требует токен пользователя
+           const USER_TOKEN = process.env.VK_USER_TOKEN;
            const ACTIVE_TOKEN = USER_TOKEN || VK_TOKEN;
 
            let targetCategoryId = 1;
@@ -172,36 +166,50 @@ app.post('/api/vk-webhook', async (req, res) => {
              targetCategoryId = cat ? cat.id : catData.response.items[0].id;
            }
 
+           // Обложка (первое фото)
            let uploadUrlRes = await fetch(`https://api.vk.com/method/photos.getMarketUploadServer?group_id=${group_id}&main_photo=1&access_token=${ACTIVE_TOKEN}&v=${VK_API_V}`);
            let uploadUrlData = await uploadUrlRes.json();
-           if (uploadUrlData.error) throw new Error('UploadServer API: ' + JSON.stringify(uploadUrlData.error));
            let uploadUrl = uploadUrlData.response.upload_url;
 
-           let imgRes = await fetch(mainPhotoUrl);
+           let imgRes = await fetch(photoUrls[0]);
            let imgBlob = await imgRes.blob();
-
            const formData = new FormData();
            formData.append('file', imgBlob, 'cover.jpg');
            let uploadedRes = await fetch(uploadUrl, { method: 'POST', body: formData });
            let uploadedData = await uploadedRes.json();
-           if (uploadedData.error) throw new Error('Upload API: ' + JSON.stringify(uploadedData.error));
 
-           let saveQ = new URLSearchParams({
-             group_id: group_id,
-             photo: uploadedData.photo,
-             server: uploadedData.server,
-             hash: uploadedData.hash,
-             access_token: ACTIVE_TOKEN,
-             v: VK_API_V
-           });
+           let saveQ = new URLSearchParams({ group_id, photo: uploadedData.photo, server: uploadedData.server, hash: uploadedData.hash, access_token: ACTIVE_TOKEN, v: VK_API_V });
            if (uploadedData.crop_data) saveQ.append('crop_data', uploadedData.crop_data);
            if (uploadedData.crop_hash) saveQ.append('crop_hash', uploadedData.crop_hash);
            let savedPhotoRes = await fetch(`https://api.vk.com/method/photos.saveMarketPhoto`, { method: 'POST', body: saveQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
            let savedPhotoData = await savedPhotoRes.json();
-           if (savedPhotoData.error) throw new Error('SavePhoto API: ' + JSON.stringify(savedPhotoData.error));
-           let photoId = savedPhotoData.response[0].id;
+           let mainPhotoId = savedPhotoData.response[0].id;
 
-           // Извлекаем целочисленные ID видео для прикрепления внутрь карточки товара
+           // Дополнительные фото (Market API поддерживает до 4 дополнительных фото)
+           const extraPhotoIds = [];
+           const extraUrls = photoUrls.slice(1, 5); 
+           if (extraUrls.length > 0) {
+               let extraUploadUrlRes = await fetch(`https://api.vk.com/method/photos.getMarketUploadServer?group_id=${group_id}&main_photo=0&access_token=${ACTIVE_TOKEN}&v=${VK_API_V}`);
+               let extraUploadUrlData = await extraUploadUrlRes.json();
+               let extraUrl = extraUploadUrlData.response.upload_url;
+               
+               for (const url of extraUrls) {
+                   let eImgRes = await fetch(url);
+                   let eImgBlob = await eImgRes.blob();
+                   const eFormData = new FormData();
+                   eFormData.append('file', eImgBlob, 'extra.jpg');
+                   let eUploadedRes = await fetch(extraUrl, { method: 'POST', body: eFormData });
+                   let eUploadedData = await eUploadedRes.json();
+
+                   let eSaveQ = new URLSearchParams({ group_id, photo: eUploadedData.photo, server: eUploadedData.server, hash: eUploadedData.hash, access_token: ACTIVE_TOKEN, v: VK_API_V });
+                   let eSavedRes = await fetch(`https://api.vk.com/method/photos.saveMarketPhoto`, { method: 'POST', body: eSaveQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
+                   let eSavedData = await eSavedRes.json();
+                   if (eSavedData.response && eSavedData.response[0]) {
+                       extraPhotoIds.push(eSavedData.response[0].id);
+                   }
+               }
+           }
+
            const marketVideoIds = [];
            for (const att of attachments || []) {
              if (att.type === 'video') marketVideoIds.push(att.video.id);
@@ -213,31 +221,55 @@ app.post('/api/vk-webhook', async (req, res) => {
              description: marketDescription || 'Описание котенка',
              category_id: targetCategoryId,
              price: price,
-             main_photo_id: photoId,
+             main_photo_id: mainPhotoId,
              access_token: ACTIVE_TOKEN,
              v: VK_API_V
            });
            if (marketVideoIds.length > 0) addMarketQ.append('video_ids', marketVideoIds.join(','));
+           if (extraPhotoIds.length > 0) addMarketQ.append('photo_ids', extraPhotoIds.join(','));
            
            let addedMarketRes = await fetch(`https://api.vk.com/method/market.add`, { method: 'POST', body: addMarketQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
            let addedMarketData = await addedMarketRes.json();
            
            if (addedMarketData.response && addedMarketData.response.market_item_id) {
                marketCreated = true;
-               const marketId = addedMarketData.response.market_item_id;
-               
-               // ВАЖНО: Мы больше не прикрепляем сам товар к стене как виджет (vkAttachmentsArr.push), 
-               // потому что виджет заставляет ВК удалять красивую фотографию из карусели стены.
-               // Вместо этого мы элегантно добавляем ссылку на этот товар в конец текста поста!
+               marketId = addedMarketData.response.market_item_id;
                postText += `\n\n🛍 Подробности и полная карточка котенка: https://vk.com/market-${group_id}?w=product-${group_id}_${marketId}`;
            } else {
                marketDebugLog = JSON.stringify(addedMarketData.error);
-               console.error('Market Add Error:', addedMarketData);
            }
         } catch (e) {
-          console.error("Market creation error: ", e);
           marketDebugLog = e.message;
         }
+      }
+
+      // СОБИРАЕМ КАРУСЕЛЬ НА СТЕНУ (грузим ВСЕ фотки на сервер стены)
+      if (photoUrls.length > 0) {
+          try {
+              let wallServerRes = await fetch(`https://api.vk.com/method/photos.getWallUploadServer?group_id=${group_id}&access_token=${VK_TOKEN}&v=${VK_API_V}`);
+              let wallServerData = await wallServerRes.json();
+              if (wallServerData.response && wallServerData.response.upload_url) {
+                  let wallUrl = wallServerData.response.upload_url;
+                  const upperLimit = Math.min(photoUrls.length, 10);
+                  for (let i = 0; i < upperLimit; i++) {
+                     let imgRes = await fetch(photoUrls[i]);
+                     let imgBlob = await imgRes.blob();
+                     const formData = new FormData();
+                     formData.append('photo', imgBlob, 'photo.jpg');
+                     let uploadedRes = await fetch(wallUrl, { method: 'POST', body: formData });
+                     let uploadedData = await uploadedRes.json();
+                     
+                     let saveWallQ = new URLSearchParams({ group_id, photo: uploadedData.photo, server: uploadedData.server, hash: uploadedData.hash, access_token: VK_TOKEN, v: VK_API_V });
+                     let savedWallRes = await fetch(`https://api.vk.com/method/photos.saveWallPhoto`, { method: 'POST', body: saveWallQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
+                     let savedWallData = await savedWallRes.json();
+                     
+                     if (savedWallData.response && savedWallData.response[0]) {
+                         const newPhoto = savedWallData.response[0];
+                         vkAttachmentsArr.push(`photo${newPhoto.owner_id}_${newPhoto.id}`);
+                     }
+                  }
+              }
+          } catch(e) { console.error("Wall photo error:", e); }
       }
 
       vkAttachmentString = vkAttachmentsArr.join(',') || null;
