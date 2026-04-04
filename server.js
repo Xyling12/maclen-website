@@ -135,9 +135,11 @@ app.post('/api/vk-webhook', async (req, res) => {
       if (attachments && attachments.length > 0) {
         for (const att of attachments) {
           if (att.type === 'video') {
-            vkAttachmentsArr.push(`video${att.video.owner_id}_${att.video.id}`);
+            const access = att.video.access_key ? `_${att.video.access_key}` : '';
+            vkAttachmentsArr.push(`video${att.video.owner_id}_${att.video.id}${access}`);
           } else if (att.type === 'photo') {
-            vkAttachmentsArr.push(`photo${att.photo.owner_id}_${att.photo.id}`);
+            const access = att.photo.access_key ? `_${att.photo.access_key}` : '';
+            vkAttachmentsArr.push(`photo${att.photo.owner_id}_${att.photo.id}${access}`);
             // Выбираем самое большое разрешение для обложки товара
             if (!mainPhotoUrl) {
               const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
@@ -195,6 +197,12 @@ app.post('/api/vk-webhook', async (req, res) => {
            if (savedPhotoData.error) throw new Error('SavePhoto API: ' + JSON.stringify(savedPhotoData.error));
            let photoId = savedPhotoData.response[0].id;
 
+           // Извлекаем ID видео для прикрепления внутрь карточки товара
+           const marketVideoIds = [];
+           for (const att of attachments || []) {
+             if (att.type === 'video') marketVideoIds.push(`${att.video.owner_id}_${att.video.id}`);
+           }
+
            let addMarketQ = new URLSearchParams({
              owner_id: `-${group_id}`,
              name: marketTitle || 'Котенок Maclen',
@@ -205,6 +213,8 @@ app.post('/api/vk-webhook', async (req, res) => {
              access_token: ACTIVE_TOKEN,
              v: VK_API_V
            });
+           if (marketVideoIds.length > 0) addMarketQ.append('video_ids', marketVideoIds.join(','));
+           
            let addedMarketRes = await fetch(`https://api.vk.com/method/market.add`, { method: 'POST', body: addMarketQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
            let addedMarketData = await addedMarketRes.json();
            
