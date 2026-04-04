@@ -70,6 +70,124 @@ app.post('/api/submit', async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+app.post('/api/vk-webhook', async (req, res) => {
+  const AITUNNEL_KEY = process.env.AITUNNEL_KEY || 'sk-aitunnel-GEhq2XTu9QmIrrOZe2S1Di2WAdp7yQ0C';
+  const VK_CONFIRMATION_CODE = process.env.VK_CONFIRMATION_CODE || '9ed5321c';
+  // Если захотите повысить безопасность, можете проверять req.body.secret === 'aaQ13axAPQEcczQa'
+  
+  // 1. Подтверждение сервера Callback API
+  if (req.body.type === 'confirmation') {
+    return res.send(VK_CONFIRMATION_CODE);
+  }
+
+  // 2. Обработка нового сообщения (от Елены)
+  if (req.body.type === 'message_new') {
+    // ВКонтакте требует сразу вернуть 'ok', иначе будет слать дубли сообщений
+    res.send('ok');
+
+    const message = req.body.object.message || req.body.object;
+    const text = message.text;
+    const attachments = message.attachments;
+
+    // Если нет текста, ничего не генерируем
+    if (!text || text.trim() === '') return;
+
+    try {
+      console.log('Got message to auto-process:', text);
+      
+      // 3. Генерация поста через AI (AITunnel)
+      const prompt = `Ты — профессиональный SMM-маркетолог элитного питомника мейн-кунов. 
+Тебе дали сухие факты о котенке: "${text}".
+Напиши ОДИН очень красивый, эмоциональный и душевный пост для стены ВКонтакте об этом котенке, чтобы его захотели купить.
+Используй переносы строк и релевантные эмодзи.
+В конце добавь призыв написать в ЛС группы для бронирования.
+И добавь хештеги: #мейнкунижевск #питомникмейнкунов #купитьмейнкуна #мейнкункотята`;
+
+      // Endpoint AITunnel (обычно он совместим с форматом OpenAI v1)
+      const aiRes = await fetch('https://api.aitunnel.ru/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${AITUNNEL_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini', // или любая модель, доступная в вашей подписке AITunnel
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 0.7
+        })
+      });
+
+      const aiData = await aiRes.json();
+      if (!aiData.choices || !aiData.choices[0]) {
+          throw new Error('AI Generate failed: ' + JSON.stringify(aiData));
+      }
+      
+      const generatedPostText = aiData.choices[0].message.content;
+      console.log('AI Generated text length:', generatedPostText.length);
+
+      // 4. Подхватываем видео из сообщения Елены, чтобы прикрепить к будущему посту
+      let vkAttachmentString = null;
+      if (attachments && attachments.length > 0) {
+        // Ищем видео среди вложений
+        const videoExt = attachments.find(att => att.type === 'video');
+        if (videoExt) {
+          // Формируем внутреннюю ссылку ВК для прикрепления к посту
+          vkAttachmentString = `video${videoExt.video.owner_id}_${videoExt.video.id}`;
+        }
+      }
+
+      // 5. Публикуем готовый пост на стене от имени группы
+      const wallQuery = new URLSearchParams({
+        owner_id: `-${req.body.group_id}`,
+        from_group: '1',
+        message: generatedPostText,
+        access_token: VK_TOKEN,
+        v: VK_API_V
+      });
+      // Если было видео, прикрепляем его к посту
+      if (vkAttachmentString) {
+        wallQuery.append('attachments', vkAttachmentString);
+      }
+
+      const postRes = await fetch('https://api.vk.com/method/wall.post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: wallQuery.toString()
+      });
+      
+      const postResponseData = await postRes.json();
+      console.log('Post Wall Response:', postResponseData);
+
+      // 6. Отвечаем Елене в личку, что все прошло успешно
+      let reportMessage = '✅ Шеф, пост успешно сгенерирован и опубликован на стене!';
+      if (postResponseData.error) {
+         reportMessage = '❌ Ошибка публикации: ' + postResponseData.error.error_msg;
+      }
+
+      const replyQuery = new URLSearchParams({
+        user_id: message.peer_id,
+        message: reportMessage,
+        random_id: Math.floor(Math.random() * 2000000000),
+        access_token: VK_TOKEN,
+        v: VK_API_V
+      });
+      
+      await fetch('https://api.vk.com/method/messages.send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: replyQuery.toString()
+      });
+
+    } catch (err) {
+      console.error('VK Webhook AI error:', err);
+      // Можно отправить Елене уведомление об ошибке
+    }
+    return;
+  }
+
+  // Для остальных системных событий (например, печать)
+  res.send('ok');
+});
 
 app.get('/api/market', async (req, res) => {
   try {
