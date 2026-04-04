@@ -111,8 +111,9 @@ app.post('/api/vk-webhook', async (req, res) => {
         },
         body: JSON.stringify({
           model: 'gpt-4o-mini', 
-          messages: [{ role: 'user', content: prompt }],
-          temperature: 0.7
+          messages: [{ role: 'system', content: 'You are a helpful assistant serving JSON objects only.' }, { role: 'user', content: prompt }],
+          temperature: 0.7,
+          response_format: { type: "json_object" }
         })
       });
 
@@ -123,14 +124,10 @@ app.post('/api/vk-webhook', async (req, res) => {
       
       let aiResponseText = aiData.choices[0].message.content;
       
-      // Защищаем от случайных реальных переносов строк внутри JSON значений
+      // Защищаем от возможных маркдаун тегов на случай если API проигнорирует формат
       aiResponseText = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
-      // Заменяем реальные новые строки на \n, кроме тех что между фигурными скобками структуры
-      aiResponseText = aiResponseText.replace(/\n/g, '\\n');
-      // Исправляем структуру JSON после бездумной замены (грубый, но рабочий хак)
-      aiResponseText = aiResponseText.replace(/\\n{/g, '{').replace(/}\\n/g, '}').replace(/,\\n"/g, ',"').replace(/": \\n"/g, '": "').replace(/\\n}/g, '}').replace(/{\\n/g, '{');
 
-      console.log("Cleaned AI JSON:", aiResponseText);
+      console.log("Safe AI JSON:", aiResponseText);
       const parsedData = JSON.parse(aiResponseText);
       
       const { postText, marketTitle, marketDescription, price } = parsedData;
