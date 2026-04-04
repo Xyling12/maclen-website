@@ -185,11 +185,11 @@ app.post('/api/vk-webhook', async (req, res) => {
              photo: uploadedData.photo,
              server: uploadedData.server,
              hash: uploadedData.hash,
-             crop_data: uploadedData.crop_data,
-             crop_hash: uploadedData.crop_hash,
              access_token: ACTIVE_TOKEN,
              v: VK_API_V
            });
+           if (uploadedData.crop_data) saveQ.append('crop_data', uploadedData.crop_data);
+           if (uploadedData.crop_hash) saveQ.append('crop_hash', uploadedData.crop_hash);
            let savedPhotoRes = await fetch(`https://api.vk.com/method/photos.saveMarketPhoto`, { method: 'POST', body: saveQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
            let savedPhotoData = await savedPhotoRes.json();
            if (savedPhotoData.error) throw new Error('SavePhoto API: ' + JSON.stringify(savedPhotoData.error));
