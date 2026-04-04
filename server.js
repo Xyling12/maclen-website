@@ -275,6 +275,7 @@ app.post('/api/vk-webhook', async (req, res) => {
       }
 
       // СОБИРАЕМ КАРУСЕЛЬ НА СТЕНУ (грузим ВСЕ фотки на сервер стены)
+      let wallDebugLog = '';
       if (photoUrls.length > 0) {
           try {
               const USER_TOKEN = process.env.VK_USER_TOKEN;
@@ -282,6 +283,8 @@ app.post('/api/vk-webhook', async (req, res) => {
 
               let wallServerRes = await fetch(`https://api.vk.com/method/photos.getWallUploadServer?group_id=${group_id}&access_token=${ACTIVE_TOKEN}&v=${VK_API_V}`);
               let wallServerData = await wallServerRes.json();
+              if (wallServerData.error) throw new Error('GetWallServer: ' + JSON.stringify(wallServerData.error));
+              
               if (wallServerData.response && wallServerData.response.upload_url) {
                   let wallUrl = wallServerData.response.upload_url;
                   const upperLimit = Math.min(photoUrls.length, 10);
@@ -291,11 +294,23 @@ app.post('/api/vk-webhook', async (req, res) => {
                      const formData = new FormData();
                      formData.append('photo', imgBlob, 'photo.jpg');
                      let uploadedRes = await fetch(wallUrl, { method: 'POST', body: formData });
-                     let uploadedData = await uploadedRes.json();
+                     let uploadedText = await uploadedRes.text();
+                     let uploadedData;
+                     try { uploadedData = JSON.parse(uploadedText); } catch(e) { throw new Error('Wall upload not json: ' + uploadedText); }
+
+                     if (!uploadedData.photo || uploadedData.photo === '[]') {
+                         // Попробуем с file1, если photo не сработал
+                         const fd2 = new FormData();
+                         fd2.append('file1', imgBlob, 'photo.jpg');
+                         let uRes2 = await fetch(wallUrl, { method: 'POST', body: fd2 });
+                         uploadedData = await uRes2.json();
+                     }
                      
                      let saveWallQ = new URLSearchParams({ group_id, photo: uploadedData.photo, server: uploadedData.server, hash: uploadedData.hash, access_token: ACTIVE_TOKEN, v: VK_API_V });
                      let savedWallRes = await fetch(`https://api.vk.com/method/photos.saveWallPhoto`, { method: 'POST', body: saveWallQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
                      let savedWallData = await savedWallRes.json();
+                     
+                     if (savedWallData.error) throw new Error('SaveWallPhoto: ' + JSON.stringify(savedWallData.error));
                      
                      if (savedWallData.response && savedWallData.response[0]) {
                          const newPhoto = savedWallData.response[0];
@@ -333,10 +348,9 @@ app.post('/api/vk-webhook', async (req, res) => {
 
       // ДОБАВЛЯЕМ ОТЛАДОЧНУУ ИНФОРМАЦИЮ ПРЯМО В ОТВЕТ
       const typesLog = attachments.map(a => a.type).join(', ');
-      reportMessage += `\n\n[Отладка]: Найдена цена = ${price}. Вложений: ${attachments.length} (${typesLog}).`;
-      if (marketDebugLog) {
-         reportMessage += `\n⚠️ Ошибка маркета: ${marketDebugLog}`;
-      }
+      reportMessage += `\n\n[Отладка]: Фотка скачана: ${photoUrls.length > 0 ? 'Да' : 'Нет'}. Вложений: ${attachments.length} (${typesLog}).`;
+      if (marketDebugLog) reportMessage += `\n⚠️ Ошибка маркета: ${marketDebugLog}`;
+      if (wallDebugLog) reportMessage += `\n⚠️ Ошибка стены: ${wallDebugLog}`;
 
       const replyQuery = new URLSearchParams({
         user_id: message.peer_id,
