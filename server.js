@@ -136,54 +136,18 @@ app.post('/api/vk-webhook', async (req, res) => {
       const vkAttachmentsArr = [];
       let mainPhotoUrl = null;
 
-      // 1. ПОЛУЧАЕМ СЕРВЕР ЗАГРУЗКИ ФОТО НА СТЕНУ
-      let wallUploadUrl = null;
-      try {
-        const wallServerRes = await fetch(`https://api.vk.com/method/photos.getWallUploadServer?group_id=${group_id}&access_token=${VK_TOKEN}&v=${VK_API_V}`);
-        const wallServerData = await wallServerRes.json();
-        if (wallServerData.response) {
-            wallUploadUrl = wallServerData.response.upload_url;
-        }
-      } catch (e) { console.error('Error getting wall upload server:', e); }
-
       if (attachments && attachments.length > 0) {
         for (const att of attachments) {
           if (att.type === 'video') {
             const access = att.video.access_key ? `_${att.video.access_key}` : '';
             vkAttachmentsArr.push(`video${att.video.owner_id}_${att.video.id}${access}`);
           } else if (att.type === 'photo') {
-            const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
-            const photoUrl = bestSize.url;
-
-            if (wallUploadUrl) {
-                try {
-                    let imgRes = await fetch(photoUrl);
-                    let imgBlob = await imgRes.blob();
-                    const formData = new FormData();
-                    formData.append('photo', imgBlob, 'photo.jpg');
-                    let uploadedRes = await fetch(wallUploadUrl, { method: 'POST', body: formData });
-                    let uploadedData = await uploadedRes.json();
-                    
-                    let saveWallQ = new URLSearchParams({
-                        group_id: group_id,
-                        photo: uploadedData.photo,
-                        server: uploadedData.server,
-                        hash: uploadedData.hash,
-                        access_token: VK_TOKEN,
-                        v: VK_API_V
-                    });
-                    let savedWallRes = await fetch(`https://api.vk.com/method/photos.saveWallPhoto`, { method: 'POST', body: saveWallQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
-                    let savedWallData = await savedWallRes.json();
-                    
-                    if (savedWallData.response && savedWallData.response[0]) {
-                         const newPhoto = savedWallData.response[0];
-                         vkAttachmentsArr.push(`photo${newPhoto.owner_id}_${newPhoto.id}`);
-                    }
-                } catch (e) { console.error('Wall photo upload error:', e); }
-            }
-
+            const access = att.photo.access_key ? `_${att.photo.access_key}` : '';
+            vkAttachmentsArr.push(`photo${att.photo.owner_id}_${att.photo.id}${access}`);
+            // Выбираем самое большое разрешение для обложки товара
             if (!mainPhotoUrl) {
-              mainPhotoUrl = photoUrl;
+              const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
+              mainPhotoUrl = bestSize.url;
             }
           }
         }
