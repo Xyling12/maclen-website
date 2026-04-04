@@ -98,7 +98,7 @@ app.post('/api/vk-webhook', async (req, res) => {
 {
   "postText": "Эмоциональный пост для стены ВКонтакте с эмодзи и хештегами",
   "marketTitle": "Название карточки товара (например: Котенок Энцо (окрас n22)). Заголовок до 100 символов.",
-  "marketDescription": "ОЧЕНЬ КРАСИВОЕ, ДЕТАЛЬНОЕ И ПРОДАЮЩЕЕ описание для карточки товара. Используй эмодзи 😻, абзацы, красивые речевые обороты. Опиши характер, ласку, красоту, чтобы клиент захотел купить. От 4 до 7 предложений.",
+  "marketDescription": "ОЧЕНЬ КРАСИВОЕ, ДЕТАЛЬНОЕ И ПРОДАЮЩЕЕ описание для карточки товара. Используй эмодзи 😻, красивые речевые обороты. Опиши характер, ласку, красоту, чтобы клиент захотел купить. От 4 до 7 предложений. ВАЖНО: используй \\n для абзацев, ЗАПРЕЩЕНО писать реальные переносы строк в JSON, иначе он сломается!",
   "price": 0
 }
 Важно: Если в тексте указана цена в рублях, запиши ее числом в поле price. Если цены нет или она не понятна, укажи 0. Верни исключительно чистый JSON.`;
@@ -122,8 +122,15 @@ app.post('/api/vk-webhook', async (req, res) => {
       }
       
       let aiResponseText = aiData.choices[0].message.content;
-      // Очистка от возможных маркдаун тегов
+      
+      // Защищаем от случайных реальных переносов строк внутри JSON значений
       aiResponseText = aiResponseText.replace(/```json/g, '').replace(/```/g, '').trim();
+      // Заменяем реальные новые строки на \n, кроме тех что между фигурными скобками структуры
+      aiResponseText = aiResponseText.replace(/\n/g, '\\n');
+      // Исправляем структуру JSON после бездумной замены (грубый, но рабочий хак)
+      aiResponseText = aiResponseText.replace(/\\n{/g, '{').replace(/}\\n/g, '}').replace(/,\\n"/g, ',"').replace(/": \\n"/g, '": "').replace(/\\n}/g, '}').replace(/{\\n/g, '{');
+
+      console.log("Cleaned AI JSON:", aiResponseText);
       const parsedData = JSON.parse(aiResponseText);
       
       const { postText, marketTitle, marketDescription, price } = parsedData;
@@ -281,7 +288,7 @@ app.post('/api/vk-webhook', async (req, res) => {
           access_token: VK_TOKEN,
           v: VK_API_V
         });
-        await fetch('https://api.vk.com/method/messages.send', { method: 'POST', body: errorQuery.toString() });
+        await fetch('https://api.vk.com/method/messages.send', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: errorQuery.toString() });
       } catch(e) {}
     }
     return;
