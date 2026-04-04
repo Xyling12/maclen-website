@@ -204,9 +204,9 @@ async function vkCall(method, params = {}) {
 // KITTENS — VK Market
 // ============================================================
 const FALLBACK_KITTENS = [
-  { name: 'Глория', details: 'Кошка · Окрас g09 · Рождена 05.11.2025', status: 'free', img: '/images/cat2.png', vkUrl: 'https://vk.com/market/product/gloria-225204095-14442146' },
-  { name: 'Энцо', details: 'Кот · Окрас n 22 · 5 месяцев', status: 'free', img: '/images/cat3.png', vkUrl: 'https://vk.com/maclen' },
-  { name: 'Эклипс', details: 'Кот · 5 месяцев', status: 'free', img: '/images/cat5.png', vkUrl: 'https://vk.com/maclen' },
+  { name: 'Глория', details: 'Кошка · Окрас g09 · Рождена 05.11.2025', status: 'free', img: '/images/cat2.webp', vkUrl: 'https://vk.com/market/product/gloria-225204095-14442146' },
+  { name: 'Энцо', details: 'Кот · Окрас n 22 · 5 месяцев', status: 'free', img: '/images/cat3.webp', vkUrl: 'https://vk.com/maclen' },
+  { name: 'Эклипс', details: 'Кот · 5 месяцев', status: 'free', img: '/images/cat5.webp', vkUrl: 'https://vk.com/maclen' },
 ];
 
 function renderKittenCard(k) {
@@ -273,12 +273,12 @@ async function loadKittens() {
 // BLOG — VK Wall (Elena's profile)
 // ============================================================
 const FALLBACK_POSTS = [
-  { date: 1711400000, text: '🐾 Наши малыши растут! Знакомьтесь — Энцо и Эклипс уже исследуют весь дом.', img: '/images/cat2.png', url: 'https://vk.com/id694180609' },
-  { date: 1710800000, text: '🏆 Вернулись с выставки кошек в Ижевске! Наша Кэсси снова показала класс.', img: '/images/cat4.png', url: 'https://vk.com/id694180609' },
-  { date: 1710200000, text: '💌 Привет от Гарфилда! Новые хозяева пишут, что он уже освоился и познакомился со всей семьёй 💕', img: '/images/cat3.png', url: 'https://vk.com/id694180609' },
-  { date: 1709600000, text: '💡 Совет заводчика: мейн-куны очень умные! Легко приучаются к командам и умеют открывать двери 😄', img: '/images/cat5.png', url: 'https://vk.com/id694180609' },
-  { date: 1709000000, text: '🐱 Новый помёт планируем на май! Можно оставить заявку на бронирование.', img: '/images/cat1.png', url: 'https://vk.com/id694180609' },
-  { date: 1708400000, text: '🌟 Питание мейн-куна — самый частый вопрос! Кормим цельным сухим кормом + натуральные добавки.', img: '/images/cat6.png', url: 'https://vk.com/id694180609' },
+  { date: 1711400000, text: '🐾 Наши малыши растут! Знакомьтесь — Энцо и Эклипс уже исследуют весь дом.', img: '/images/cat2.webp', url: 'https://vk.com/id694180609' },
+  { date: 1710800000, text: '🏆 Вернулись с выставки кошек в Ижевске! Наша Кэсси снова показала класс.', img: '/images/cat4.webp', url: 'https://vk.com/id694180609' },
+  { date: 1710200000, text: '💌 Привет от Гарфилда! Новые хозяева пишут, что он уже освоился и познакомился со всей семьёй 💕', img: '/images/cat3.webp', url: 'https://vk.com/id694180609' },
+  { date: 1709600000, text: '💡 Совет заводчика: мейн-куны очень умные! Легко приучаются к командам и умеют открывать двери 😄', img: '/images/cat5.webp', url: 'https://vk.com/id694180609' },
+  { date: 1709000000, text: '🐱 Новый помёт планируем на май! Можно оставить заявку на бронирование.', img: '/images/cat1.webp', url: 'https://vk.com/id694180609' },
+  { date: 1708400000, text: '🌟 Питание мейн-куна — самый частый вопрос! Кормим цельным сухим кормом + натуральные добавки.', img: '/images/cat6.webp', url: 'https://vk.com/id694180609' },
 ];
 
 function renderBlogCard(post) {
