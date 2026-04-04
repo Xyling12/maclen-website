@@ -150,35 +150,36 @@ app.post('/api/vk-webhook', async (req, res) => {
       // СОЗДАНИЕ ТОВАРА В МАРКЕТЕ (если есть цена и обложка)
       let marketItemAttachment = null;
       let marketCreated = false;
+      let marketDebugLog = '';
 
       if (price > 0 && mainPhotoUrl) {
         try {
            console.log('Price detected, initiating Market upload...');
-           // Динамическое получение категории "Животные/Кошки"
+           const USER_TOKEN = process.env.VK_USER_TOKEN; // Маркет требует токен пользователя
+           const ACTIVE_TOKEN = USER_TOKEN || VK_TOKEN;
+
            let targetCategoryId = 1;
-           const catRes = await fetch(`https://api.vk.com/method/market.getCategories?count=1000&access_token=${VK_TOKEN}&v=${VK_API_V}`);
+           const catRes = await fetch(`https://api.vk.com/method/market.getCategories?count=1000&access_token=${ACTIVE_TOKEN}&v=${VK_API_V}`);
            const catData = await catRes.json();
            if (catData.response && catData.response.items) {
              const cat = catData.response.items.find(c => c.name.includes('Животн') || c.name.includes('Кошк') || c.name.includes('Питомц'));
              targetCategoryId = cat ? cat.id : catData.response.items[0].id;
            }
 
-           // 1. Получаем сервер загрузки
-           let uploadUrlRes = await fetch(`https://api.vk.com/method/photos.getMarketUploadServer?group_id=${group_id}&main_photo=1&access_token=${VK_TOKEN}&v=${VK_API_V}`);
+           let uploadUrlRes = await fetch(`https://api.vk.com/method/photos.getMarketUploadServer?group_id=${group_id}&main_photo=1&access_token=${ACTIVE_TOKEN}&v=${VK_API_V}`);
            let uploadUrlData = await uploadUrlRes.json();
+           if (uploadUrlData.error) throw new Error('UploadServer API: ' + JSON.stringify(uploadUrlData.error));
            let uploadUrl = uploadUrlData.response.upload_url;
 
-           // 2. Скачиваем фото в Blob
            let imgRes = await fetch(mainPhotoUrl);
            let imgBlob = await imgRes.blob();
 
-           // 3. Отправляем фото
            const formData = new FormData();
            formData.append('file', imgBlob, 'cover.jpg');
            let uploadedRes = await fetch(uploadUrl, { method: 'POST', body: formData });
            let uploadedData = await uploadedRes.json();
+           if (uploadedData.error) throw new Error('Upload API: ' + JSON.stringify(uploadedData.error));
 
-           // 4. Сохраняем фото в товарах
            let saveQ = new URLSearchParams({
              group_id: group_id,
              photo: uploadedData.photo,
@@ -186,14 +187,14 @@ app.post('/api/vk-webhook', async (req, res) => {
              hash: uploadedData.hash,
              crop_data: uploadedData.crop_data,
              crop_hash: uploadedData.crop_hash,
-             access_token: VK_TOKEN,
+             access_token: ACTIVE_TOKEN,
              v: VK_API_V
            });
            let savedPhotoRes = await fetch(`https://api.vk.com/method/photos.saveMarketPhoto`, { method: 'POST', body: saveQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
            let savedPhotoData = await savedPhotoRes.json();
+           if (savedPhotoData.error) throw new Error('SavePhoto API: ' + JSON.stringify(savedPhotoData.error));
            let photoId = savedPhotoData.response[0].id;
 
-           // 5. Создаем сам товар
            let addMarketQ = new URLSearchParams({
              owner_id: `-${group_id}`,
              name: marketTitle || 'Котенок Maclen',
@@ -201,7 +202,7 @@ app.post('/api/vk-webhook', async (req, res) => {
              category_id: targetCategoryId,
              price: price,
              main_photo_id: photoId,
-             access_token: VK_TOKEN,
+             access_token: ACTIVE_TOKEN,
              v: VK_API_V
            });
            let addedMarketRes = await fetch(`https://api.vk.com/method/market.add`, { method: 'POST', body: addMarketQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
@@ -210,13 +211,14 @@ app.post('/api/vk-webhook', async (req, res) => {
            if (addedMarketData.response && addedMarketData.response.market_item_id) {
                marketCreated = true;
                marketItemAttachment = `market-${group_id}_${addedMarketData.response.market_item_id}`;
-               // Прикрепляем свежесозданный товар к массиву вложений поста
                vkAttachmentsArr.push(marketItemAttachment);
            } else {
+               marketDebugLog = JSON.stringify(addedMarketData.error);
                console.error('Market Add Error:', addedMarketData);
            }
         } catch (e) {
           console.error("Market creation error: ", e);
+          marketDebugLog = e.message;
         }
       }
 
@@ -244,7 +246,10 @@ app.post('/api/vk-webhook', async (req, res) => {
       if (postResponseData.error) reportMessage = '❌ Ошибка публикации: ' + postResponseData.error.error_msg;
 
       // ДОБАВЛЯЕМ ОТЛАДОЧНУУ ИНФОРМАЦИЮ ПРЯМО В ОТВЕТ
-      reportMessage += `\n\n[Отладка]: Найдена цена = ${price}. Найдено фото = ${mainPhotoUrl ? 'Да' : 'Нет'}. Всего вложений получено от вас: ${attachments ? attachments.length : 0}`;
+      reportMessage += `\n\n[Отладка]: Найдена цена = ${price}. Фото обнаружено = ${mainPhotoUrl ? 'Да' : 'Нет'}. Вложений: ${attachments ? attachments.length : 0}`;
+      if (marketDebugLog) {
+         reportMessage += `\n⚠️ Ошибка маркета: ${marketDebugLog}`;
+      }
 
       const replyQuery = new URLSearchParams({
         user_id: message.peer_id,
