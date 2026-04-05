@@ -575,6 +575,27 @@ section { padding: 5rem 0; }
 }
 .kittens__cta { text-align: center; }
 
+/* Skeleton shimmer cards */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position: 600px 0; }
+}
+.kitten-skeleton {
+  pointer-events: none;
+}
+.kitten-skeleton__img {
+  aspect-ratio: 4 / 5;
+  background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+.kitten-skeleton__line {
+  border-radius: 6px;
+  background: linear-gradient(90deg, #e8e8e8 25%, #f5f5f5 50%, #e8e8e8 75%);
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
 /* ============================================
    PARENTS
    ============================================ */

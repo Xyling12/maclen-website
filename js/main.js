@@ -296,9 +296,26 @@ function renderKittenCard(k, i) {
     </div>`;
 }
 
+// Show skeleton placeholder cards while API loads
+function showKittenSkeletons(grid, count = 3) {
+  grid.innerHTML = Array.from({length: count}, () => `
+    <div class="kitten-card kitten-skeleton">
+      <div class="kitten-card__img kitten-skeleton__img"></div>
+      <div class="kitten-card__body">
+        <div class="kitten-skeleton__line" style="width:60%;height:1.2rem;margin-bottom:.75rem"></div>
+        <div class="kitten-skeleton__line" style="width:85%;height:.8rem;margin-bottom:.5rem"></div>
+        <div class="kitten-skeleton__line" style="width:40%;height:.8rem;margin-bottom:1.25rem"></div>
+        <div class="kitten-skeleton__line" style="width:100%;height:2.4rem;border-radius:8px"></div>
+      </div>
+    </div>`).join('');
+}
+
 async function loadKittens() {
   const grid = document.getElementById('kittensGrid');
   if (!grid) return;
+
+  // Show skeletons immediately — no spinner
+  showKittenSkeletons(grid, 3);
 
   let kittens = null;
 
@@ -326,14 +343,22 @@ async function loadKittens() {
         };
       });
 
-      // Dynamically update Hero Collage with real kittens if available
+      // Smoothly swap Hero Collage images only when new ones are loaded
       const heroImgs = document.querySelectorAll('.hero__circle img');
       if (heroImgs && heroImgs.length > 0) {
         kittens.slice(0, heroImgs.length).forEach((k, idx) => {
-          if (k.img) {
-            heroImgs[idx].src = k.img;
-            heroImgs[idx].alt = k.name;
-          }
+          if (!k.img) return;
+          const tempImg = new Image();
+          tempImg.onload = () => {
+            heroImgs[idx].style.transition = 'opacity 0.4s ease';
+            heroImgs[idx].style.opacity = '0';
+            setTimeout(() => {
+              heroImgs[idx].src = k.img;
+              heroImgs[idx].alt = k.name;
+              heroImgs[idx].style.opacity = '1';
+            }, 200);
+          };
+          tempImg.src = k.img;
         });
       }
     }
@@ -346,8 +371,11 @@ async function loadKittens() {
   globalKittensData = kittens;
 
   grid.innerHTML = kittens.map((k, i) => renderKittenCard(k, i)).join('');
-  grid.querySelectorAll('.kitten-card').forEach(el => {
+  grid.querySelectorAll('.kitten-card').forEach((el, i) => {
     el.classList.add('fade-up');
+    // First 3 cards load eagerly
+    const img = el.querySelector('img');
+    if (img && i < 3) img.loading = 'eager';
     observer.observe(el);
   });
 }
