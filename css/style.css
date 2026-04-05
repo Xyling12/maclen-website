@@ -1192,13 +1192,12 @@ footer {
   70%  { box-shadow: 0 0 0 14px rgba(74,124,89,0); }
   100% { box-shadow: 0 0 0 0 rgba(74,124,89,0); }
 }
-.nav__cta {
+.nav__cta .btn-primary {
   animation: pulse-ring 2.5s ease-out infinite;
 }
-.nav__cta:hover {
+.nav__cta:hover .btn-primary,
+.nav__cta .btn-primary:hover {
   animation: none;
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(74,124,89,.4);
 }
 
 /* --- Trust bar slide-in on load --- */
