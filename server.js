@@ -193,16 +193,7 @@ app.post('/api/vk-webhook', async (req, res) => {
            const USER_TOKEN = process.env.VK_USER_TOKEN;
            const ACTIVE_TOKEN = USER_TOKEN || VK_TOKEN;
 
-           let targetCategoryId = 1;
-           const catRes = await fetch(`https://api.vk.com/method/market.getCategories?count=1000&access_token=${ACTIVE_TOKEN}&v=${VK_API_V}`);
-           const catData = await catRes.json();
-           if (catData.response && catData.response.items) {
-             const cat = catData.response.items.find(c => {
-                 const n = c.name.toLowerCase();
-                 return n.includes('животн') && !n.includes('текстиль') && !n.includes('услуг');
-             });
-             targetCategoryId = cat ? cat.id : catData.response.items[0].id;
-           }
+           let targetCategoryId = 40532; // "Домашние животные" in VK Market (ID 40532)
 
            // Обложка (первое фото)
            let uploadUrlRes = await fetch(`https://api.vk.com/method/photos.getMarketUploadServer?group_id=${group_id}&main_photo=1&access_token=${ACTIVE_TOKEN}&v=${VK_API_V}`);
