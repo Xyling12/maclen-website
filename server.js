@@ -199,7 +199,7 @@ app.post('/api/vk-webhook', async (req, res) => {
            if (catData.response && catData.response.items) {
              const cat = catData.response.items.find(c => {
                  const n = c.name.toLowerCase();
-                 return n.includes('животн') && !n.includes('текстиль');
+                 return n.includes('животн') && !n.includes('текстиль') && !n.includes('услуг');
              });
              targetCategoryId = cat ? cat.id : catData.response.items[0].id;
            }
@@ -268,6 +268,14 @@ app.post('/api/vk-webhook', async (req, res) => {
            
            let addedMarketRes = await fetch(`https://api.vk.com/method/market.add`, { method: 'POST', body: addMarketQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
            let addedMarketData = await addedMarketRes.json();
+
+           if (addedMarketData.error && addedMarketData.error.error_code === 15) {
+               // Блок "Услуги" отключен в группе, используем базовую категорию 1 (Гардероб/Иное), которая точно работает
+               addMarketQ.set('category_id', 1);
+               addedMarketRes = await fetch(`https://api.vk.com/method/market.add`, { method: 'POST', body: addMarketQ.toString(), headers: {'Content-Type': 'application/x-www-form-urlencoded'}});
+               addedMarketData = await addedMarketRes.json();
+               marketDebugLog = 'Категория "Животные" недоступна (отключены Услуги в ВК). Товар временно помещен в базовую категорию.';
+           }
            
            if (addedMarketData.response && addedMarketData.response.market_item_id) {
                marketCreated = true;
