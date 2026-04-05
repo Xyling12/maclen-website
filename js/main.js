@@ -617,12 +617,35 @@ async function loadBlog() {
   });
 }
 
+// Generic Image Lightbox (reusing postModal)
+window.openImageZoom = function(src, alt) {
+  const container = document.getElementById('postModalContainer');
+  container.style.aspectRatio = 'auto';
+  container.innerHTML = `<img src="${src}" alt="${alt}" style="width:100%; max-height:85vh; object-fit:contain; display:block; background:#000;">`;
+  document.getElementById('postModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+};
+
 // ============================================================
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
   loadKittens();
   loadBlog();
+  
+  // Make parent and alumni images clickable
+  document.querySelectorAll('.parent-card__img').forEach(el => {
+    el.style.cursor = 'pointer';
+    const img = el.querySelector('img');
+    if(img) {
+      el.onclick = () => window.openImageZoom(img.src, img.alt || '');
+    }
+    // Add hover overlay hint
+    const overlay = document.createElement('div');
+    overlay.className = 'parent-card__img-overlay';
+    overlay.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>';
+    el.appendChild(overlay);
+  });
 });
 
 // ============================================================

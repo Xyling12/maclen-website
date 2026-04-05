@@ -633,6 +633,22 @@ section { padding: 5rem 0; }
 .parent-card__img {
   aspect-ratio: 4 / 5;
   overflow: hidden;
+  position: relative;
+}
+.parent-card__img-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .25s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+.parent-card__img:hover .parent-card__img-overlay {
+  background: rgba(0,0,0,.25);
+  opacity: 1;
 }
 .parent-card__img img {
   width: 100%; height: 100%;
