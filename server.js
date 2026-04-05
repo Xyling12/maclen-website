@@ -82,6 +82,12 @@ app.post('/api/vk-webhook', async (req, res) => {
       res.send('ok');
 
       const message = req.body.object.message || req.body.object;
+
+      // Ограничиваем вызов автопостера только для администраторов (Елена и разработчик)
+      const ALLOWED_ADMINS = [694180609, 23912024];
+      if (!ALLOWED_ADMINS.includes(message.from_id)) {
+        return; // Игнорируем сообщения от обычных пользователей
+      }
       
       // Ищем текст во всех возможных местах
       let text = message.text || '';
