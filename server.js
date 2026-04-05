@@ -23,7 +23,7 @@ app.get('/api/testVideo', async (req, res) => {
 });
 
 const VK_TOKEN = process.env.VK_GROUP_TOKEN;
-const VK_USER_ID = '23912024'; // Maxim's ID temporarily
+const VK_USER_ID = '694180609'; // Elena Matrosova's ID
 const VK_API_V = '5.131';
 
 app.post('/api/submit', async (req, res) => {
