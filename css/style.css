@@ -538,6 +538,20 @@ section { padding: 5rem 0; }
   transition: transform .5s ease;
 }
 .kitten-card:hover .kitten-card__img img { transform: scale(1.06); }
+.kitten-card__img-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .25s ease;
+  opacity: 0;
+}
+.kitten-card__img:hover .kitten-card__img-overlay {
+  background: rgba(0,0,0,.25);
+  opacity: 1;
+}
 .kitten-card__status {
   position: absolute;
   top: 12px; left: 12px;

@@ -276,11 +276,12 @@ function renderKittenCard(k, i) {
   const statusClass = k.status === 'free' ? 'free' : 'reserved';
   return `
     <div class="kitten-card">
-      <div class="kitten-card__img">
+    <div class="kitten-card__img" onclick="openKittenModal(${i})" style="cursor:pointer">
         <img src="${k.img}" alt="${k.name} — мейн-кун, питомник Maclen Ижевск"
              onerror="this.src='https://images.unsplash.com/photo-1561948955-570b270e7c36?w=600&q=80';this.onerror=null"
              loading="lazy">
         ${k.videoIframeUrl ? '<div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; display: flex; align-items: center; gap: 5px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> Видео</div>' : ''}
+        <div class="kitten-card__img-overlay"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg></div>
         <span class="kitten-card__status kitten-card__status--${statusClass}">${statusLabel}</span>
       </div>
       <div class="kitten-card__body">
