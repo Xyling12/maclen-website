@@ -234,7 +234,7 @@ window.openPostModal = function(index) {
 
     container.innerHTML = `
       <div style="display:flex; flex-direction:column; max-height:85vh; background:#fff; overflow-y:auto; overflow-x:hidden;">
-        ${post.img ? `<img src="${post.img}" style="width:100%; max-height:50vh; object-fit:cover; background:#f4f4f4; border-bottom:1px solid #eee;">` : ''}
+        ${post.img ? `<div style="width: 100%; background: #111; text-align: center; border-bottom: 2px solid var(--green);"><img src="${post.img}" style="max-width: 100%; max-height: 60vh; object-fit: contain; display: inline-block; vertical-align: bottom;"></div>` : ''}
         <div style="padding: 1.5rem 1.25rem; color:#222; font-size:1.05rem; line-height:1.7; font-family:var(--font-sans);">
           <div style="color:var(--text-light); font-size:0.875rem; margin-bottom:1.5rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">${formatDate(post.date)}</div>
           <div style="color:#222;">
