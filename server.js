@@ -472,8 +472,8 @@ app.post('/api/vk-webhook', async (req, res) => {
                   const fileSize = fs.statSync(tmpPath).size;
                   console.log(`Видео скачано, размер: ${fileSize} байт. Загружаем в ВК Клипы...`);
 
-                  // 1. Получаем сервер загрузки клипа
-                  let createClipRes = await fetch(`https://api.vk.com/method/shortVideo.create?v=${VK_API_V}&access_token=${ACTIVE_USER_TOKEN}&group_id=${group_id}&file_size=${fileSize}&description=${encodeURIComponent(postText)}&wallpost=1`);
+                  // 1. Получаем сервер загрузки видео (Клипы запрещены для сторонних приложений)
+                  let createClipRes = await fetch(`https://api.vk.com/method/video.save?v=${VK_API_V}&access_token=${ACTIVE_USER_TOKEN}&group_id=${group_id}&name=${encodeURIComponent('Новое видео')}&description=${encodeURIComponent(postText)}&wallpost=1`);
                   let createClipData = await createClipRes.json();
                   
                   if (createClipData.error) {
