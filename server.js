@@ -427,17 +427,17 @@ app.post('/api/vk-webhook', async (req, res) => {
                       const vGetRes = await fetch(vGetUrl);
                       const vGetData = await vGetRes.json();
                       
+                      // ОТЛАДКА ОТВЕТА API В ЧАТ (ДЛЯ ПРОСМОТРА ОШИБОК)
+                      try {
+                         await fetch('https://api.vk.com/method/messages.send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: new URLSearchParams({ user_id: req.body.object.message ? req.body.object.message.peer_id : req.body.object.peer_id, message: `[video.get ${ACTIVE_USER_TOKEN === process.env.VK_MAXIM_TOKEN ? 'Maxim' : 'User'}]:\n` + JSON.stringify(vGetData).substring(0, 1000), random_id: Math.floor(Math.random()*999999), access_token: VK_TOKEN, v: VK_API_V })
+                         });
+                      } catch(e) {}
+                      
                       if (vGetData.response && vGetData.response.items && vGetData.response.items.length > 0) {
                           const vItem = vGetData.response.items[0];
-                          
-                          // ОТЛАДКА ОТВЕТА API В ЧАТ
-                          try {
-                             await fetch('https://api.vk.com/method/messages.send', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                                body: new URLSearchParams({ user_id: req.body.object.message ? req.body.object.message.peer_id : req.body.object.peer_id, message: '[video.get]:\n' + JSON.stringify(vItem).substring(0, 800), random_id: Math.floor(Math.random()*999999), access_token: VK_TOKEN, v: VK_API_V })
-                             });
-                          } catch(e) {}
 
                           if (vItem.files) {
                               const mp4Url = vItem.files.mp4_1080 || vItem.files.mp4_720 || vItem.files.mp4_480 || vItem.files.mp4_360 || vItem.files.mp4_240;
