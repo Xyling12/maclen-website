@@ -1,6 +1,10 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const { exec } = require('child_process');
+const util = require('util');
+const execPromise = util.promisify(exec);
 
 const app = express();
 app.use(cors());
@@ -137,6 +141,13 @@ app.post('/api/vk-webhook', async (req, res) => {
       console.log('Got message to auto-process:', text);
       const group_id = req.body.group_id;
       
+      let isClip = false;
+      if (/#клип|#clip/i.test(text)) {
+          isClip = true;
+          text = text.replace(/#клип|#clip/ig, '').trim();
+          console.log("Clip mode enabled via hashtag!");
+      }
+      
       const prompt = `Ты — профессиональный SMM-маркетолог элитного питомника мейн-кунов. 
 Тебе дали сырые факты о котенке: "${text}".
 Твоя задача — вернуть СТРОГИЙ JSON. Верни только объект.
@@ -185,6 +196,7 @@ app.post('/api/vk-webhook', async (req, res) => {
       let vkAttachmentString = null;
       const vkAttachmentsArr = [];
       let photoUrls = [];
+      let videoDownloadUrls = [];
 
       if (attachments && attachments.length > 0) {
         // Функция для извлечения медиа
@@ -194,7 +206,11 @@ app.post('/api/vk-webhook', async (req, res) => {
             if (vObj) {
               const access = vObj.access_key ? `_${vObj.access_key}` : '';
               vkAttachmentsArr.push(`video${vObj.owner_id}_${vObj.id}${access}`);
+              // Добавляем ссылку для yt-dlp
+              videoDownloadUrls.push(`https://vk.com/video${vObj.owner_id}_${vObj.id}`);
             }
+          } else if (att.type === 'doc' && att.doc && att.doc.url && isClip) {
+            videoDownloadUrls.push(att.doc.url); // Если прислали документом напрямую
           } else if (att.type === 'photo') {
             if (att.photo && att.photo.sizes) {
                const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
@@ -359,26 +375,86 @@ app.post('/api/vk-webhook', async (req, res) => {
 
       vkAttachmentString = vkAttachmentsArr.join(',') || null;
 
-      // ПУБЛИКАЦИЯ НА СТЕНУ
-      const wallQuery = new URLSearchParams({
-        owner_id: `-${group_id}`,
-        from_group: '1',
-        message: postText,
-        access_token: VK_TOKEN,
-        v: VK_API_V
-      });
-      if (vkAttachmentString) wallQuery.append('attachments', vkAttachmentString);
+      // ПУБЛИКАЦИЯ
+      let reportMessage = '✨ Обработка завершена!';
+      let postResponseData = {};
 
-      const postRes = await fetch('https://api.vk.com/method/wall.post', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: wallQuery.toString()
-      });
-      const postResponseData = await postRes.json();
+      if (isClip && videoDownloadUrls.length > 0) {
+          // *** ПУБЛИКАЦИЯ КЛИПА ***
+          const targetVideo = videoDownloadUrls[0];
+          try {
+              const USER_TOKEN = process.env.VK_USER_TOKEN || VK_TOKEN;
+              const tmpPath = path.join(__dirname, `clip_${Date.now()}.mp4`);
+              
+              // Если это прямая ссылка на документ (начинается с http и имеет параметры скачивания ВК), скачиваем обычным fetch
+              // Но для надежности и универсальности всегда можно попробовать yt-dlp, однако для документов yt-dlp не нужен
+              if (targetVideo.includes('vk.com/video')) {
+                  console.log(`Скачиваем видео для клипа через yt-dlp: ${targetVideo}`);
+                  await execPromise(`yt-dlp "${targetVideo}" -o "${tmpPath}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --merge-output-format mp4`);
+              } else {
+                  console.log(`Скачиваем документ-видео: ${targetVideo}`);
+                  const vidRes = await fetch(targetVideo);
+                  const arrayBuffer = await vidRes.arrayBuffer();
+                  fs.writeFileSync(tmpPath, Buffer.from(arrayBuffer));
+              }
 
-      let reportMessage = '✨ Пост успешно опубликован на стене!';
+              if (fs.existsSync(tmpPath)) {
+                  const fileSize = fs.statSync(tmpPath).size;
+                  console.log(`Видео скачано, размер: ${fileSize} байт. Загружаем в ВК Клипы...`);
+
+                  // 1. Получаем сервер загрузки клипа
+                  let createClipRes = await fetch(`https://api.vk.com/method/shortVideo.create?v=${VK_API_V}&access_token=${USER_TOKEN}&group_id=${group_id}&file_size=${fileSize}&description=${encodeURIComponent(postText)}&wallpost=1`);
+                  let createClipData = await createClipRes.json();
+                  
+                  if (createClipData.error) {
+                      throw new Error('ShortVideo Create Error: ' + JSON.stringify(createClipData.error));
+                  }
+
+                  const uploadUrl = createClipData.response.upload_url;
+                  
+                  // 2. Отправляем видео файл на сервер
+                  const imgBlob = new Blob([fs.readFileSync(tmpPath)], { type: 'video/mp4' });
+                  const formData = new FormData();
+                  formData.append('file', imgBlob, 'clip.mp4');
+                  
+                  let uploadedRes = await fetch(uploadUrl, { method: 'POST', body: formData });
+                  let uploadedData = await uploadedRes.json();
+                  
+                  console.log('Видео загружено на сервер Клипов:', uploadedData);
+                  reportMessage = '✨ Клип успешно загружен и скоро появится в разделе Клипов (и на стене)!';
+                  
+                  // Чистим временный файл
+                  fs.unlinkSync(tmpPath);
+              } else {
+                  throw new Error('Видео файл не был создан после скачивания');
+              }
+          } catch(err) {
+              console.error('Ошибка загрузки клипа:', err);
+              reportMessage = '❌ Ошибка загрузки клипа: ' + err.message;
+          }
+      } else {
+          // *** ПУБЛИКАЦИЯ ОБЫЧНОГО ПОСТА НА СТЕНУ ***
+          const wallQuery = new URLSearchParams({
+            owner_id: `-${group_id}`,
+            from_group: '1',
+            message: postText,
+            access_token: VK_TOKEN,
+            v: VK_API_V
+          });
+          if (vkAttachmentString) wallQuery.append('attachments', vkAttachmentString);
+
+          const postRes = await fetch('https://api.vk.com/method/wall.post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: wallQuery.toString()
+          });
+          postResponseData = await postRes.json();
+
+          reportMessage = '✨ Пост успешно опубликован на стене!';
+          if (postResponseData.error) reportMessage = '❌ Ошибка публикации: ' + postResponseData.error.error_msg;
+      }
+
       if (marketCreated) reportMessage += '\n🛍 Карточка товара успешно создана!';
-      if (postResponseData.error) reportMessage = '❌ Ошибка публикации: ' + postResponseData.error.error_msg;
 
       // ДОБАВЛЯЕМ ОТЛАДОЧНУУ ИНФОРМАЦИЮ ПРЯМО В ОТВЕТ
       const typesLog = attachments.map(a => a.type).join(', ');
