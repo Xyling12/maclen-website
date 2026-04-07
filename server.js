@@ -112,17 +112,26 @@ app.post('/api/vk-webhook', async (req, res) => {
 
       if (!text || text.trim() === '') return;
 
-      // ФОРСИРУЕМ ПЕРЕЗАПРОС СООБЩЕНИЯ (ВК Webhook обрезает массив!)
-      try {
-          const fetchMsgRes = await fetch(`https://api.vk.com/method/messages.getById?message_ids=${message.id}&group_id=${req.body.group_id}&access_token=${VK_TOKEN}&v=${VK_API_V}`);
-          const fetchMsgData = await fetchMsgRes.json();
-          if (fetchMsgData.response && fetchMsgData.response.items && fetchMsgData.response.items.length > 0) {
-              const fullMsg = fetchMsgData.response.items[0];
-              if (fullMsg.attachments && fullMsg.attachments.length > attachments.length) {
-                  attachments = fullMsg.attachments; // Перезаписываем обрезанный массив полным
+      // ФОРСИРУЕМ ПЕРЕЗАПРОС СООБЩЕНИЯ (ВК Webhook обрезает массив + видео из приложения обрабатывается с задержкой!)
+      let retries = 5;
+      while (attachments.length === 0 && retries > 0) {
+          try {
+              const fetchMsgRes = await fetch(`https://api.vk.com/method/messages.getById?message_ids=${message.id}&group_id=${req.body.group_id}&access_token=${VK_TOKEN}&v=${VK_API_V}`);
+              const fetchMsgData = await fetchMsgRes.json();
+              if (fetchMsgData.response && fetchMsgData.response.items && fetchMsgData.response.items.length > 0) {
+                  const fullMsg = fetchMsgData.response.items[0];
+                  if (fullMsg.attachments && fullMsg.attachments.length > attachments.length) {
+                      attachments = fullMsg.attachments; // Перезаписываем обрезанный массив полным
+                      break;
+                  }
               }
+          } catch(e) { console.error('Refetch err:', e); }
+          
+          if (attachments.length === 0) {
+              await new Promise(r => setTimeout(r, 2000));
+              retries--;
           }
-      } catch(e) { console.error('Refetch err:', e); }
+      }
 
     try {
       console.log('Got message to auto-process:', text);
@@ -178,14 +187,27 @@ app.post('/api/vk-webhook', async (req, res) => {
       let photoUrls = [];
 
       if (attachments && attachments.length > 0) {
-        for (const att of attachments) {
-          if (att.type === 'video') {
-            const access = att.video.access_key ? `_${att.video.access_key}` : '';
-            vkAttachmentsArr.push(`video${att.video.owner_id}_${att.video.id}${access}`);
+        // Функция для извлечения медиа
+        const extractMedia = (att) => {
+          if (att.type === 'video' || att.type === 'clip') {
+            const vObj = att.video || att.clip;
+            if (vObj) {
+              const access = vObj.access_key ? `_${vObj.access_key}` : '';
+              vkAttachmentsArr.push(`video${vObj.owner_id}_${vObj.id}${access}`);
+            }
           } else if (att.type === 'photo') {
-            const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
-            photoUrls.push(bestSize.url);
+            if (att.photo && att.photo.sizes) {
+               const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
+               photoUrls.push(bestSize.url);
+            }
+          } else if (att.type === 'wall' && att.wall && att.wall.attachments) {
+            // Если прислали репост стены, вытаскиваем фотки/видео из самого поста
+            for (const subAtt of att.wall.attachments) extractMedia(subAtt);
           }
+        };
+
+        for (const att of attachments) {
+          extractMedia(att);
         }
       }
 
