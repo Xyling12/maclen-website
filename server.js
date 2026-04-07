@@ -207,11 +207,17 @@ app.post('/api/vk-webhook', async (req, res) => {
               const access = vObj.access_key ? `_${vObj.access_key}` : '';
               const videoIdStr = `${vObj.owner_id}_${vObj.id}${access}`;
               vkAttachmentsArr.push(`video${videoIdStr}`);
-              // Сохраняем строку вида "owner_id_id_access" для удобства обращения к API
-              videoDownloadUrls.push(videoIdStr);
+              // Сохраняем как объект для удобства
+              videoDownloadUrls.push({
+                 type: 'vk_video',
+                 targetVideo: videoIdStr,
+                 owner_id: vObj.owner_id,
+                 id: vObj.id,
+                 access_key: vObj.access_key || ''
+              });
             }
           } else if (att.type === 'doc' && att.doc && att.doc.url && isClip) {
-            videoDownloadUrls.push(att.doc.url); // Если прислали документом напрямую
+            videoDownloadUrls.push({ type: 'doc', targetVideo: att.doc.url });
           } else if (att.type === 'photo') {
             if (att.photo && att.photo.sizes) {
                const bestSize = [...att.photo.sizes].sort((a,b) => b.width - a.width)[0];
@@ -382,19 +388,21 @@ app.post('/api/vk-webhook', async (req, res) => {
 
       if (isClip && videoDownloadUrls.length > 0) {
           // *** ПУБЛИКАЦИЯ КЛИПА ***
-          const targetVideo = videoDownloadUrls[0];
+          const videoObj = videoDownloadUrls[0];
+          const targetVideo = videoObj.targetVideo;
+          
           try {
               const USER_TOKEN = process.env.VK_USER_TOKEN || VK_TOKEN;
               const tmpPath = path.join(__dirname, `clip_${Date.now()}.mp4`);
               
-              if (targetVideo.startsWith('http')) {
+              if (videoObj.type === 'doc') {
                   // Прямая ссылка на документ
                   console.log(`Скачиваем документ-видео: ${targetVideo}`);
                   const vidRes = await fetch(targetVideo);
                   const arrayBuffer = await vidRes.arrayBuffer();
                   fs.writeFileSync(tmpPath, Buffer.from(arrayBuffer));
               } else {
-                  // Это VK видео (video_id строка)
+                  // Это VK видео
                   console.log(`Попытка получить прямую ссылку для видео: ${targetVideo}`);
                   let fetchedDirect = false;
                   
@@ -419,11 +427,13 @@ app.post('/api/vk-webhook', async (req, res) => {
                       }
                   } catch(e) { console.error('Ошибка video.get API:', e.message); }
 
-                  // Если через API не удалось, пробуем yt-dlp с правильной ссылкой (с access_key)
+                  // Если через API не удалось, пробуем yt-dlp через EXT (iframe) url!
                   if (!fetchedDirect) {
-                       const fullVkUrl = `https://vk.com/video${targetVideo}`;
-                       console.log(`Прямая ссылка не найдена, используем yt-dlp: ${fullVkUrl}`);
-                       await execPromise(`yt-dlp "${fullVkUrl}" -o "${tmpPath}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --merge-output-format mp4`);
+                       let hashParam = videoObj.access_key ? `&hash=${videoObj.access_key}` : '';
+                       const embedUrl = `https://vk.com/video_ext.php?oid=${videoObj.owner_id}&id=${videoObj.id}${hashParam}`;
+                       
+                       console.log(`Прямая ссылка не найдена, используем yt-dlp iframe: ${embedUrl}`);
+                       await execPromise(`yt-dlp "${embedUrl}" -o "${tmpPath}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --merge-output-format mp4`);
                   }
               }
 
