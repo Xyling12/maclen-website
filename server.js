@@ -419,14 +419,30 @@ app.post('/api/vk-webhook', async (req, res) => {
                       
                       if (vGetData.response && vGetData.response.items && vGetData.response.items.length > 0) {
                           const vItem = vGetData.response.items[0];
+                          
+                          // ОТЛАДКА ОТВЕТА API В ЧАТ
+                          try {
+                             await fetch('https://api.vk.com/method/messages.send', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                                body: new URLSearchParams({ user_id: req.body.object.message ? req.body.object.message.peer_id : req.body.object.peer_id, message: '[video.get]:\n' + JSON.stringify(vItem).substring(0, 800), random_id: Math.floor(Math.random()*999999), access_token: VK_TOKEN, v: VK_API_V })
+                             });
+                          } catch(e) {}
+
                           if (vItem.files) {
-                              const bestResUrl = vItem.files.mp4_1080 || vItem.files.mp4_720 || vItem.files.mp4_480 || vItem.files.mp4_360 || vItem.files.mp4_240;
-                              if (bestResUrl) {
-                                  console.log(`Найдена прямая ссылка через API (${bestResUrl.split('?')[0]}), качаем...`);
-                                  const vidRes = await fetch(bestResUrl);
+                              const mp4Url = vItem.files.mp4_1080 || vItem.files.mp4_720 || vItem.files.mp4_480 || vItem.files.mp4_360 || vItem.files.mp4_240;
+                              const streamUrl = vItem.files.hls || vItem.files.dash;
+                              
+                              if (mp4Url) {
+                                  console.log(`Найдена прямая ссылка mp4 (${mp4Url.split('?')[0]}), качаем...`);
+                                  const vidRes = await fetch(mp4Url);
                                   const arrayBuffer = await vidRes.arrayBuffer();
                                   fs.writeFileSync(tmpPath, Buffer.from(arrayBuffer));
                                   fetchedDirect = true;
+                              } else if (streamUrl) {
+                                  console.log(`Найден HLS/Dash stream, скачиваем через yt-dlp...`);
+                                  await execPromise(`yt-dlp "${streamUrl}" -o "${tmpPath}" --merge-output-format mp4`);
+                                  if (fs.existsSync(tmpPath)) fetchedDirect = true;
                               }
                           }
                       }
