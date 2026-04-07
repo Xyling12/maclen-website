@@ -485,7 +485,7 @@ app.post('/api/vk-webhook', async (req, res) => {
                   // 2. Отправляем видео файл на сервер
                   const imgBlob = new Blob([fs.readFileSync(tmpPath)], { type: 'video/mp4' });
                   const formData = new FormData();
-                  formData.append('file', imgBlob, 'clip.mp4');
+                  formData.append('video_file', imgBlob, 'clip.mp4');
                   
                   let uploadedRes = await fetch(uploadUrl, { method: 'POST', body: formData });
                   let uploadedData = await uploadedRes.json();
