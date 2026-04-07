@@ -155,7 +155,8 @@ app.post('/api/vk-webhook', async (req, res) => {
 Важнейшее правило: Текст постов должен быть разбит на короткие абзацы для легкости чтения!
 Для переноса строки ОБЯЗАТЕЛЬНО используй конструкцию \\n\\n (с двумя экранированными слэшами, чтобы JSON парсер не сломался).
 
-В конце поста добавь 2-4 уникальных по смыслу хэштега (например, #черныймрамор #рыжийкотенок #ласковыйкот). Постоянные хэштеги добавлять НЕ НУЖНО (они прикрепятся автоматически скриптом).
+В конце поста добавь 2-4 уникальных хэштега: часть из них должна быть "именными" (отсылать к питомнику Maclen, породе мейн-кун или окрасу), а часть — вовлекающими/дополнительными (для привлечения покупателей).
+Постоянные фирменные хэштеги добавлять НЕ НУЖНО (они прикрепятся автоматически скриптом).
 
 Структура:
 {
@@ -397,7 +398,16 @@ app.post('/api/vk-webhook', async (req, res) => {
           const targetVideo = videoObj.targetVideo;
           
           try {
-              const USER_TOKEN = process.env.VK_USER_TOKEN || VK_TOKEN;
+              // Динамический выбор токена в зависимости от того, кто отправил сообщение!
+              let ACTIVE_USER_TOKEN;
+              if (message.from_id === 23912024 && process.env.VK_MAXIM_TOKEN) {
+                  ACTIVE_USER_TOKEN = process.env.VK_MAXIM_TOKEN;
+                  console.log("Используется личный токен Максима для выгрузки видео.");
+              } else {
+                  ACTIVE_USER_TOKEN = process.env.VK_USER_TOKEN || VK_TOKEN;
+                  console.log("Используется токен Елены (или базовый токен сообщества).");
+              }
+
               const tmpPath = path.join(__dirname, `clip_${Date.now()}.mp4`);
               
               if (videoObj.type === 'doc') {
@@ -411,9 +421,9 @@ app.post('/api/vk-webhook', async (req, res) => {
                   console.log(`Попытка получить прямую ссылку для видео: ${targetVideo}`);
                   let fetchedDirect = false;
                   
-                  // Пытаемся получить прямую ссылку через API
+                  // Пытаемся получить прямую ссылку через API с правами АКТИВНОГО пользователя
                   try {
-                      const vGetUrl = `https://api.vk.com/method/video.get?videos=${targetVideo}&access_token=${USER_TOKEN}&v=${VK_API_V}`;
+                      const vGetUrl = `https://api.vk.com/method/video.get?videos=${targetVideo}&access_token=${ACTIVE_USER_TOKEN}&v=${VK_API_V}`;
                       const vGetRes = await fetch(vGetUrl);
                       const vGetData = await vGetRes.json();
                       
@@ -463,7 +473,7 @@ app.post('/api/vk-webhook', async (req, res) => {
                   console.log(`Видео скачано, размер: ${fileSize} байт. Загружаем в ВК Клипы...`);
 
                   // 1. Получаем сервер загрузки клипа
-                  let createClipRes = await fetch(`https://api.vk.com/method/shortVideo.create?v=${VK_API_V}&access_token=${USER_TOKEN}&group_id=${group_id}&file_size=${fileSize}&description=${encodeURIComponent(postText)}&wallpost=1`);
+                  let createClipRes = await fetch(`https://api.vk.com/method/shortVideo.create?v=${VK_API_V}&access_token=${ACTIVE_USER_TOKEN}&group_id=${group_id}&file_size=${fileSize}&description=${encodeURIComponent(postText)}&wallpost=1`);
                   let createClipData = await createClipRes.json();
                   
                   if (createClipData.error) {

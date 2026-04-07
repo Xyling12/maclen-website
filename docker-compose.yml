@@ -7,5 +7,7 @@ services:
     environment:
       - VK_GROUP_TOKEN=${VK_GROUP_TOKEN}
       - VK_USER_TOKEN=${VK_USER_TOKEN}
+      - VK_MAXIM_TOKEN=${VK_MAXIM_TOKEN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     ports:
       - "80"
