@@ -205,9 +205,10 @@ app.post('/api/vk-webhook', async (req, res) => {
             const vObj = att.video || att.clip;
             if (vObj) {
               const access = vObj.access_key ? `_${vObj.access_key}` : '';
-              vkAttachmentsArr.push(`video${vObj.owner_id}_${vObj.id}${access}`);
-              // Добавляем ссылку для yt-dlp
-              videoDownloadUrls.push(`https://vk.com/video${vObj.owner_id}_${vObj.id}`);
+              const videoIdStr = `${vObj.owner_id}_${vObj.id}${access}`;
+              vkAttachmentsArr.push(`video${videoIdStr}`);
+              // Сохраняем строку вида "owner_id_id_access" для удобства обращения к API
+              videoDownloadUrls.push(videoIdStr);
             }
           } else if (att.type === 'doc' && att.doc && att.doc.url && isClip) {
             videoDownloadUrls.push(att.doc.url); // Если прислали документом напрямую
@@ -386,16 +387,44 @@ app.post('/api/vk-webhook', async (req, res) => {
               const USER_TOKEN = process.env.VK_USER_TOKEN || VK_TOKEN;
               const tmpPath = path.join(__dirname, `clip_${Date.now()}.mp4`);
               
-              // Если это прямая ссылка на документ (начинается с http и имеет параметры скачивания ВК), скачиваем обычным fetch
-              // Но для надежности и универсальности всегда можно попробовать yt-dlp, однако для документов yt-dlp не нужен
-              if (targetVideo.includes('vk.com/video')) {
-                  console.log(`Скачиваем видео для клипа через yt-dlp: ${targetVideo}`);
-                  await execPromise(`yt-dlp "${targetVideo}" -o "${tmpPath}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --merge-output-format mp4`);
-              } else {
+              if (targetVideo.startsWith('http')) {
+                  // Прямая ссылка на документ
                   console.log(`Скачиваем документ-видео: ${targetVideo}`);
                   const vidRes = await fetch(targetVideo);
                   const arrayBuffer = await vidRes.arrayBuffer();
                   fs.writeFileSync(tmpPath, Buffer.from(arrayBuffer));
+              } else {
+                  // Это VK видео (video_id строка)
+                  console.log(`Попытка получить прямую ссылку для видео: ${targetVideo}`);
+                  let fetchedDirect = false;
+                  
+                  // Пытаемся получить прямую ссылку через API
+                  try {
+                      const vGetUrl = `https://api.vk.com/method/video.get?videos=${targetVideo}&access_token=${USER_TOKEN}&v=${VK_API_V}`;
+                      const vGetRes = await fetch(vGetUrl);
+                      const vGetData = await vGetRes.json();
+                      
+                      if (vGetData.response && vGetData.response.items && vGetData.response.items.length > 0) {
+                          const vItem = vGetData.response.items[0];
+                          if (vItem.files) {
+                              const bestResUrl = vItem.files.mp4_1080 || vItem.files.mp4_720 || vItem.files.mp4_480 || vItem.files.mp4_360 || vItem.files.mp4_240;
+                              if (bestResUrl) {
+                                  console.log(`Найдена прямая ссылка через API (${bestResUrl.split('?')[0]}), качаем...`);
+                                  const vidRes = await fetch(bestResUrl);
+                                  const arrayBuffer = await vidRes.arrayBuffer();
+                                  fs.writeFileSync(tmpPath, Buffer.from(arrayBuffer));
+                                  fetchedDirect = true;
+                              }
+                          }
+                      }
+                  } catch(e) { console.error('Ошибка video.get API:', e.message); }
+
+                  // Если через API не удалось, пробуем yt-dlp с правильной ссылкой (с access_key)
+                  if (!fetchedDirect) {
+                       const fullVkUrl = `https://vk.com/video${targetVideo}`;
+                       console.log(`Прямая ссылка не найдена, используем yt-dlp: ${fullVkUrl}`);
+                       await execPromise(`yt-dlp "${fullVkUrl}" -o "${tmpPath}" -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" --merge-output-format mp4`);
+                  }
               }
 
               if (fs.existsSync(tmpPath)) {
