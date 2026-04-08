@@ -1,129 +1,77 @@
-# 🐱 Maclen — Питомник мейн-кунов | Сайт
+<div align="center">
+  <h1>🐱 Maclen</h1>
+  <p><b>Официальный сайт монопородного питомника мейн-кунов</b></p>
 
-**Live demo:** https://maclen-website.vercel.app  
-**Стек:** Vanilla HTML5 · CSS (Variables, Grid, Flexbox) · JavaScript (без фреймворков)  
-**Дизайн:** "Light Natural" — шалфей, белый, песок  
+  [![HTML5](https://img.shields.io/badge/HTML5-Semantic-E34F26.svg?style=flat&logo=html5&logoColor=white)](https://developer.mozilla.org/ru/docs/Web/HTML)
+  [![CSS3](https://img.shields.io/badge/CSS3-Animations-1572B6.svg?style=flat&logo=css3&logoColor=white)](https://developer.mozilla.org/ru/docs/Web/CSS)
+  [![JavaScript](https://img.shields.io/badge/Vanilla_JS-ES6+-F7DF1E.svg?style=flat&logo=javascript&logoColor=black)](https://developer.mozilla.org/ru/docs/Web/JavaScript)
+  [![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000.svg?style=flat&logo=vercel&logoColor=white)](https://vercel.com)
+</div>
 
 ---
 
-## 📁 Структура проекта
+## 📖 О проекте
 
+Современный, быстрый и отзывчивый веб-сайт для питомника "Maclen". Написан на чистом (Vanilla) HTML/CSS/JS без использования тяжелых фреймворков для обеспечения 100 баллов PageSpeed и идеального SEO. Дизайн-система "Light Natural" (шалфей, белый, песочный цвета) с планарными и параллакс анимациями.
+
+*   **Live demo:** [https://maclen-website.vercel.app](https://maclen-website.vercel.app)
+
+### 🌟 Ключевые модули
+
+*   **Динамическая витрина:** Интеграция с `VK Market API` для автоматической выгрузки списка котят и цен. При недоступности ВКонтакте подставляются fallback-карточки.
+*   **Новостной блог:** Вставка постов из паблика ВК через `VK Wall API`.
+*   **Глубокое SEO:** Schema.org (LocalBusiness), Open Graph, сжатые изображения (WebP), sitemap и robots.txt.
+*   **Анимации (Scroll Reveal):** Липкий хедер, выезжающие слова (split-word), параллакс фото, плавающие карточки.
+
+---
+
+## 🛠 Структура и Меню сайта
+
+Сайт состоит из одной длинной Landing Page с якорями и отдельных служебных страниц.
+
+| Секция в меню | Что отображает |
+| :--- | :--- |
+| **О питомнике** | Текстовый блок о философии питомника, статистические счетчики (лет работы, котят). |
+| **Котята** | Динамическая витрина доступных котят (тянется из раздела "Товары" ВК). |
+| **Производители** | Раздел с элитными производителями-чемпионами питомника. |
+| **Как купить** | Пошаговый гайд (Резерв → Договор → Переезд). |
+| **Отзывы и Блог**| Карусель реальных отзывов, FAQ и последние новости из группы ВК. |
+
+```text
+📁 maclen-website
+├── index.html          # Главная страница (11 UI-секций)
+├── thanks.html         # Страница благодарности (после отправки лида)
+├── 404.html            # Страница ошибки + редирект
+├── 📂 css/style.css    # Вся модульная дизайн-система и анимации
+├── 📂 js/main.js       # Логика: VK API, IntersectionObserver, FAQ
+└── 📂 images/          # Оптимизированные медиа-ассеты
 ```
-maclen-website/
-├── index.html          # Главная страница (11 секций)
-├── thanks.html         # Страница "Спасибо" после отправки формы
-├── 404.html            # Страница 404
-├── robots.txt          # SEO: robots
-├── sitemap.xml         # SEO: sitemap
-├── css/
-│   └── style.css       # Весь CSS (дизайн-система + анимации)
-├── js/
-│   └── main.js         # Логика: VK API, анимации, FAQ, счётчики
-├── images/             # Локальные фото котов (cat1–6.png)
-│   ├── cat1.png        # Hero main / Bolk Golden Glory
-│   ├── cat2.png        # Hero sm / Глория / Blog
-│   ├── cat3.png        # Hero sm / Энцо / Blog
-│   ├── cat4.png        # Cassie SharmMuar / Blog
-│   ├── cat5.png        # Adam Maclen / Эклипс / Blog
-│   └── cat6.png        # О питомнике (Elena + cat)
-└── PLAN.md             # Полный план разработки и следующие шаги
-```
 
 ---
 
-## ✅ Что реализовано
+## ⚙️ Настройка и Подключение ВКонтакте
 
-### Секции сайта
-- **Hero** — заголовок, 3 фото, отзыв-badge, кнопки CTA
-- **Trust Bar** — 5 иконок доверия (WCF, прививки, генетика, договор, доставка)
-- **О питомнике** — текст + фото + статистика (счётчики) + кнопки
-- **Котята** — VK Market API + fallback-карточки с ценами
-- **Производители** — 3 карточки (Cassie, Adam, Bolk)
-- **Как купить** — 4 шага
-- **Отзывы** — 3 карточки + рейтинг 5.0
-- **FAQ** — аккордеон с 5 вопросами
-- **Блог** — VK Wall API + 6 fallback-постов
-- **Форма заявки** — FormSubmit.co интеграция
-- **Footer** — навигация, контакты, SEO-текст
-
-### Функциональность
-- ✅ Липкий хедер со сменой стиля при скролле
-- ✅ Мобильное бургер-меню
-- ✅ FAQ аккордеон
-- ✅ Счётчики (animate on scroll)
-- ✅ VK API интеграция (с fallback)
-- ✅ FormSubmit.co форма
-- ✅ Schema.org разметка (LocalBusiness, BreadcrumbList)
-- ✅ Open Graph / Twitter Card мета-теги
-- ✅ SEO: заголовки, мета-описания, canonical
-
-### Анимации
-- ✅ Fade-up при скролле (IntersectionObserver)
-- ✅ Зелёная шторка (img-reveal) на всех фото
-- ✅ Blur → резкость на фото в секции "О нас"
-- ✅ Split-word: слова заголовков вылетают по одному
-- ✅ Eyebrow-line: подчёркивание с анимированной чертой
-- ✅ Swipe-in: надписи выезжают слева
-- ✅ Floating: фото в Hero медленно покачиваются
-- ✅ Shimmer: кнопка "Смотреть котят" переливается
-- ✅ Pulse-ring: кнопка WhatsApp в навигации пульсирует
-- ✅ Card hover lift + image zoom
-- ✅ Nav underline slide
-- ✅ Step icon bounce on hover
-
----
-
-## 🔧 Конфигурация VK API
-
-В `js/main.js` найди и заполни:
+Для живой витрины требуется **Service Token VK API**. Настройки находятся в начале `js/main.js`:
 
 ```javascript
-const VK_TOKEN = '';  // Вставить Service Token из VK
-const VK_OWNER_ID_ELENA  = 694180609;   // Личный профиль Елены
-const VK_OWNER_ID_GROUP  = -225204095;  // Группа @maclen
+const VK_TOKEN = '';            // Вставить Service Token
+const VK_OWNER_ID_ELENA  = 694180609;   // Профиль Елены (откуда тянуть котят)
+const VK_OWNER_ID_GROUP  = -225204095;  // Паблик (откуда тянуть посты)
 ```
-
-**Как получить токен:**
-1. Зайди на https://vk.com/apps → Создать приложение → Standalone
-2. Настройки → Сервисный ключ доступа
-3. Вставь токен в `VK_TOKEN`
-
-При **пустом токене** сайт работает с fallback-данными.
+> **Внимание:** без токена сайт не сломается — просто покажет старые сохраненные fallback-посты и шаблонных котят.
 
 ---
 
-## 🚀 Деплой
+## 🚀 Запуск и Деплоймент
 
-Проект задеплоен на **Vercel** через CLI:
+Не требует `npm install`. Для локальной проверки можно использовать любой Live Server (VS Code).
+
+### Деплой на Vercel
 
 ```bash
-# Превью
-npx vercel
-
-# Production
-npx vercel --prod
+npx vercel          # Опубликовать Preview
+npx vercel --prod   # Выпустить в Production
 ```
 
-**Связанный проект:** `xyling123-1085s-projects/maclen-website`  
-**Production URL:** https://maclen-website.vercel.app
-
----
-
-## 📧 Форма заявки
-
-Использует [FormSubmit.co](https://formsubmit.co):
-- Email: `matrosova67@internet.ru`
-- Redirect: `https://maclen.ru/thanks.html`
-- При первой отправке нужно **подтвердить email** через письмо от FormSubmit
-
----
-
-## 📱 Контакты питомника
-
-| Канал | Данные |
-|-------|--------|
-| WhatsApp Елена | +7 (912) 757-01-36 |
-| WhatsApp Максим | +7 (922) 518-40-40 |
-| ВКонтакте | vk.com/maclen |
-| Email | matrosova67@internet.ru |
-| Адрес | Ижевск, Удмуртская Республика |
+### Форма заявок
+Интегрирован шлюз **FormSubmit.co**. Заявки улетают на почту напрямую из HTML-кода (без бэкенда). Базовая почта для приема: `matrosova67@internet.ru`.
