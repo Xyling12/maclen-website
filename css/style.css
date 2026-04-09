@@ -1584,3 +1584,24 @@ footer {
     padding: 1.5rem 1rem !important;
   }
 }
+
+/* Fix video collapsing when image is hidden */
+#kModalVideoFrame {
+    position: static !important; 
+    flex: 1 1 auto !important; /* Grow like the image did */
+    width: 100% !important;
+    height: auto !important;
+    min-height: 400px; /* Sensible default for desktop */
+    background: #000;
+}
+
+/* Fix video thumbnail squishing */
+#kModalThumbs > div {
+    flex-shrink: 0 !important;
+}
+
+@media (max-width: 768px) {
+    #kModalVideoFrame {
+        min-height: 50vh !important; /* Huge on mobile! */
+    }
+}
