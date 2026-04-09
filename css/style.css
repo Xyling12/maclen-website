@@ -445,7 +445,7 @@ section { padding: 5rem 0; }
 .about { background: var(--cream); }
 .about__inner {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr;
   gap: 5rem;
   align-items: center;
 }
@@ -1075,7 +1075,7 @@ footer {
   .step::after { display: none; }
 
   .lead-form__inner { grid-template-columns: 1fr; }
-  .footer__inner { grid-template-columns: 1fr 1fr; }
+  .footer__inner { grid-template-columns: 1.2fr 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -1470,12 +1470,12 @@ footer {
   position: relative;
   background: var(--white);
   border-radius: var(--radius);
-  max-width: 900px;
+  max-width: 1100px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr;
   box-shadow: 0 10px 40px rgba(0,0,0,0.2);
   transform: translateY(20px) scale(0.95);
   transition: transform 0.3s cubic-bezier(.4,0,.2,1);
@@ -1517,8 +1517,9 @@ footer {
 }
 .kitten-modal__main-img {
   width: 100%;
-  aspect-ratio: 4/3;
+  max-height: 75vh;
   object-fit: contain;
+  aspect-ratio: auto;
   background-color: var(--sand-light);
 }
 .kitten-modal__thumbs {
