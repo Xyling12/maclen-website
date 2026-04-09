@@ -531,7 +531,8 @@ section { padding: 5rem 0; }
 }
 .kitten-card__img img {
   width: 100%; height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background-color: var(--sand-light);
   object-position: top center;
   filter: saturate(1.15) contrast(1.05);
   image-rendering: -webkit-optimize-contrast;
