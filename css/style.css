@@ -523,7 +523,7 @@ section { padding: 5rem 0; }
   box-shadow: var(--shadow);
   transition: var(--transition);
 
-  border-radius: 0 0 var(--radius) var(--radius) !important;
+  
 }
 .kitten-card:hover {
   transform: translateY(-6px);
@@ -538,15 +538,15 @@ section { padding: 5rem 0; }
 .kitten-card__img img {
   width: 100%;
   height: 100%;
-  object-fit: cover !important;
-  object-position: center 8% !important; /* Pull image down */
+  object-fit: contain !important;
+  object-position: center !important;
   transition: transform .5s ease;
 }
 .kitten-card:hover .kitten-card__img img {
   width: 100%;
   height: 100%;
-  object-fit: cover !important;
-  object-position: center 8% !important; /* Pull image down */
+  object-fit: contain !important;
+  object-position: center !important;
   transition: transform .5s ease;
 }
 .kitten-card__img-overlay {
