@@ -330,8 +330,8 @@
   <div class="kitten-modal__content">
     <button class="kitten-modal__close" onclick="closeKittenModal()">×</button>
     <div class="kitten-modal__left">
-      <div style="position: relative; width: 100%; aspect-ratio: 4/3; background-color: var(--sand-light); border-radius: var(--radius-md); overflow: hidden;">
-        <img src="" id="kModalMainImg" class="kitten-modal__main-img" alt="Фото котенка мейн-кун">
+      <div style="flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; position: relative; width: 100%; background-color: var(--sand-light); border-radius: var(--radius-md); overflow: hidden;">
+        <img src="" id="kModalMainImg" class="kitten-modal__main-img" alt="Фото котенка мейн-кун" style="width: 100%; height: 100%; object-fit: contain;">
       </div>
       <div class="kitten-modal__thumbs" id="kModalThumbs"></div>
     </div>
