@@ -1487,6 +1487,16 @@ footer {
 .kitten-modal.active .kitten-modal__content {
   transform: translateY(0) scale(1);
 }
+/* Режим просмотра фото: модалка по размеру картинки, без чёрной зоны */
+.kitten-modal__content.kitten-modal__content--fit {
+  height: auto !important;
+  max-height: 92vh !important;
+  width: auto !important;
+  max-width: min(96vw, 1100px) !important;
+  background: transparent !important;
+  overflow: visible !important;
+  display: block !important;
+}
 @media (max-width: 768px) {
   .kitten-modal__content {
     grid-template-columns: 1fr;

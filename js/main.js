@@ -257,6 +257,8 @@ window.openPostModal = function(index) {
 window.closePostModal = function() {
   document.getElementById('postModal').classList.remove('active');
   document.getElementById('postModalContainer').innerHTML = '';
+  const content = document.querySelector('#postModal .kitten-modal__content');
+  if (content) content.classList.remove('kitten-modal__content--fit');
   document.body.style.overflow = '';
 };
 
@@ -621,7 +623,10 @@ async function loadBlog() {
 window.openImageZoom = function(src, alt) {
   const container = document.getElementById('postModalContainer');
   container.style.aspectRatio = 'auto';
-  container.innerHTML = `<img src="${src}" alt="${alt}" style="width:100%; max-height:85vh; object-fit:contain; display:block; background:#000;">`;
+  container.innerHTML = `<img src="${src}" alt="${alt}" style="width:100%; height:auto; max-height:85vh; object-fit:contain; display:block;">`;
+  // Режим «фото»: модалка подгоняется под картинку (без чёрной зоны от высоты 85vh видео-режима)
+  const content = container.closest('.kitten-modal__content');
+  if (content) content.classList.add('kitten-modal__content--fit');
   document.getElementById('postModal').classList.add('active');
   document.body.style.overflow = 'hidden';
 };
@@ -670,6 +675,9 @@ async function loadLitters() {
           <div class="parent-card__meta">${escapeHtml(l.meta || 'Котятки')}</div>
         </div>
       </div>`).join('');
+      // Динамические карточки не попали под начальный IntersectionObserver —
+      // снимаем «шторку» img-reveal вручную, иначе зелёный оверлей скрывает фото.
+      grid.querySelectorAll('.img-reveal').forEach(el => el.classList.add('revealed'));
     }
   } catch (e) { /* при ошибке остаются статичные карточки из HTML */ }
   bindParentCardZoom();
