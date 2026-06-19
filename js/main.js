@@ -652,11 +652,40 @@ function bindParentCardZoom() {
   });
 }
 
-// Раздел «Выпускники»: карточки помётов тянутся с сервера (/api/litters),
-// который наполняется ботом из ЛС по тегу #помёт. Статичные карточки в HTML — запасной вариант.
+// Раздел «Выпускники»: помёты тянутся ИЗ ФОТОАЛЬБОМОВ VK группы (/api/litters).
+// Любой новый альбом «Помёт …» появляется на сайте сам. Клик по карточке открывает
+// галерею со всеми фото альбома (/api/album?id=…). Статичные карточки в HTML — запасной вариант.
 function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 }
+
+// Галерея всех фото помёта (свайп + стрелки), переиспользует модалку поста
+window.openLitterGallery = function(photos, title) {
+  if (!photos || !photos.length) return;
+  const container = document.getElementById('postModalContainer');
+  container.style.aspectRatio = 'auto';
+  container.style.position = 'relative';
+  const slides = photos.map(u => `<img src="${escapeHtml(u)}" alt="${escapeHtml(title || 'Помёт')}" loading="lazy">`).join('');
+  container.innerHTML =
+    `<div class="lit-gallery" id="litGallery">${slides}</div>` +
+    (photos.length > 1
+      ? `<button class="lit-gallery__nav lit-gallery__prev" aria-label="Назад">‹</button>
+         <button class="lit-gallery__nav lit-gallery__next" aria-label="Вперёд">›</button>
+         <div class="lit-gallery__counter" id="litCounter">1 / ${photos.length}</div>`
+      : '');
+  const content = container.closest('.kitten-modal__content');
+  if (content) content.classList.add('kitten-modal__content--fit');
+  document.getElementById('postModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+  if (photos.length > 1) {
+    const g = document.getElementById('litGallery');
+    const cnt = document.getElementById('litCounter');
+    const upd = () => { cnt.textContent = (Math.round(g.scrollLeft / g.clientWidth) + 1) + ' / ' + photos.length; };
+    g.addEventListener('scroll', upd, { passive: true });
+    container.querySelector('.lit-gallery__prev').onclick = () => g.scrollBy({ left: -g.clientWidth, behavior: 'smooth' });
+    container.querySelector('.lit-gallery__next').onclick = () => g.scrollBy({ left:  g.clientWidth, behavior: 'smooth' });
+  }
+};
 
 async function loadLitters() {
   const grid = document.getElementById('alumniGrid');
@@ -669,15 +698,32 @@ async function loadLitters() {
       <div class="parent-card">
         <div class="parent-card__img img-reveal">
           <img src="${escapeHtml(l.img)}" alt="${escapeHtml(l.name || 'Помёт')}" loading="lazy">
+          ${l.count ? `<span class="parent-card__badge">${l.count} фото</span>` : ''}
         </div>
         <div class="parent-card__body">
           <div class="parent-card__name display">${escapeHtml(l.name || 'Помёт')}</div>
           <div class="parent-card__meta">${escapeHtml(l.meta || 'Котятки')}</div>
         </div>
       </div>`).join('');
-      // Динамические карточки не попали под начальный IntersectionObserver —
-      // снимаем «шторку» img-reveal вручную, иначе зелёный оверлей скрывает фото.
-      grid.querySelectorAll('.img-reveal').forEach(el => el.classList.add('revealed'));
+      // Привязываем открытие галереи альбома к каждой карточке
+      grid.querySelectorAll('.parent-card__img').forEach((el, i) => {
+        const lit = data.litters[i];
+        el.classList.add('revealed');           // снимаем «шторку» img-reveal
+        el.dataset.zoomBound = '1';             // чтобы bindParentCardZoom не перехватил
+        el.style.cursor = 'pointer';
+        const ov = document.createElement('div');
+        ov.className = 'parent-card__img-overlay';
+        ov.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>';
+        el.appendChild(ov);
+        el.onclick = async () => {
+          try {
+            const r = await fetch('/api/album?id=' + encodeURIComponent(lit.album_id));
+            const d = await r.json();
+            const photos = (d.photos && d.photos.length) ? d.photos : [lit.img];
+            window.openLitterGallery(photos, lit.name);
+          } catch (e) { window.openImageZoom(lit.img, lit.name || ''); }
+        };
+      });
     }
   } catch (e) { /* при ошибке остаются статичные карточки из HTML */ }
   bindParentCardZoom();
