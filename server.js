@@ -73,7 +73,7 @@ function litterMetaFromDescription(desc, size) {
     const d = m[1].padStart(2, '0'), mo = m[2].padStart(2, '0');
     return `Котятки · рождены ${d}.${mo}.${m[3]}`;
   }
-  return size ? `${size} фото` : 'Котятки';
+  return 'Котятки'; // дату не нашли — счётчик фото и так показан бейджем на карточке
 }
 
 // Список помётов = альбомы группы с названием «Помёт …»
