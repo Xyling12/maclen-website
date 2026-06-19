@@ -337,7 +337,7 @@ async function loadKittens() {
           details: item.description ? truncate(item.description, 60) : 'Мейн-кун',
           longDesc: item.description || 'Нет подробного описания',
           status: item.availability === 0 ? 'free' : 'reserved',
-          img: item.thumb_photo || '/images/cat_placeholder.jpg',
+          img: item.thumb_photo || '/images/cat1.webp',
           photos: photos,
           videoIframeUrl: item.videoIframeUrl || null,
           vkUrl: item.market_url || `https://vk.com/maclen`

@@ -11,6 +11,24 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// Не отдаём наружу серверные/служебные файлы (express.static иначе раздаёт весь корень)
+app.use((req, res, next) => {
+  const p = req.path;
+  const blocked =
+    p === '/server.js' ||
+    /^\/package(-lock)?\.json$/i.test(p) ||
+    /^\/Dockerfile$/i.test(p) ||
+    /^\/docker-compose\.ya?ml$/i.test(p) ||
+    /\.(md|bak|log|env)$/i.test(p) ||
+    /^\/(report3?|market_dump|market_items|market_test|test2?|test)\.json$/i.test(p) ||
+    /^\/test[\w-]*\.js$/i.test(p) ||
+    /^\/topic\.txt$/i.test(p) ||
+    /^\/\.(git|env|agents)/i.test(p) ||
+    p.startsWith('/data/');
+  if (blocked) return res.status(404).end();
+  next();
+});
+
 // Serve static files from the current directory
 app.use(express.static(__dirname));
 
