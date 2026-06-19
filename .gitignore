@@ -1,1 +1,4 @@
 .vercel
+data/
+_*.js
+clip_*.mp4

@@ -629,15 +629,14 @@ window.openImageZoom = function(src, alt) {
 // ============================================================
 // INIT
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
-  loadKittens();
-  loadBlog();
-  
-  // Make parent and alumni images clickable
+// Make parent and alumni images clickable (zoom). Idempotent — safe to call after re-render.
+function bindParentCardZoom() {
   document.querySelectorAll('.parent-card__img').forEach(el => {
+    if (el.dataset.zoomBound) return;
+    el.dataset.zoomBound = '1';
     el.style.cursor = 'pointer';
     const img = el.querySelector('img');
-    if(img) {
+    if (img) {
       el.onclick = () => window.openImageZoom(img.src, img.alt || '');
     }
     // Add hover overlay hint
@@ -646,6 +645,41 @@ document.addEventListener('DOMContentLoaded', () => {
     overlay.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>';
     el.appendChild(overlay);
   });
+}
+
+// Раздел «Выпускники»: карточки помётов тянутся с сервера (/api/litters),
+// который наполняется ботом из ЛС по тегу #помёт. Статичные карточки в HTML — запасной вариант.
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+}
+
+async function loadLitters() {
+  const grid = document.getElementById('alumniGrid');
+  if (!grid) return;
+  try {
+    const res = await fetch('/api/litters');
+    const data = await res.json();
+    if (data && Array.isArray(data.litters) && data.litters.length) {
+      grid.innerHTML = data.litters.map(l => `
+      <div class="parent-card">
+        <div class="parent-card__img img-reveal">
+          <img src="${escapeHtml(l.img)}" alt="${escapeHtml(l.name || 'Помёт')}" loading="lazy">
+        </div>
+        <div class="parent-card__body">
+          <div class="parent-card__name display">${escapeHtml(l.name || 'Помёт')}</div>
+          <div class="parent-card__meta">${escapeHtml(l.meta || 'Котятки')}</div>
+        </div>
+      </div>`).join('');
+    }
+  } catch (e) { /* при ошибке остаются статичные карточки из HTML */ }
+  bindParentCardZoom();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadKittens();
+  loadBlog();
+  loadLitters();
+  bindParentCardZoom();
 });
 
 // ============================================================

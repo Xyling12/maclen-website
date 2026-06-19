@@ -30,6 +30,72 @@ const VK_TOKEN = process.env.VK_GROUP_TOKEN;
 const VK_USER_ID = '694180609'; // Elena Matrosova's ID
 const VK_API_V = '5.131';
 
+// ============================================================
+// ПОМЁТЫ (раздел «Выпускники») — авто-добавление из ЛС по тегу #помёт
+// Хранилище в постоянном volume, чтобы переживать пересборку контейнера.
+// ============================================================
+const LITTERS_DIR = process.env.LITTERS_DIR || path.join(__dirname, 'data');
+const LITTERS_FILE = path.join(LITTERS_DIR, 'litters.json');
+
+// Текущие помёты (сид при первом запуске, если файла ещё нет)
+const LITTERS_SEED = [
+  { key: 'Н',   name: 'Помёт «Н»',            meta: 'Котятки · рождены 05.05.2026', img: '/images/litter_h.jpg',   ts: 4 },
+  { key: 'А',   name: 'Первый помёт «А»',     meta: 'Помёт «А»',                    img: '/images/litter_a.jpg',   ts: 3 },
+  { key: 'С',   name: 'Помёт «С»',            meta: 'Котята · ~3 месяца',           img: '/images/litter_c1.jpg',  ts: 2 },
+  { key: 'EFG', name: 'Помёты «E», «F», «G»', meta: 'Большая семья',                img: '/images/litter_efg.jpg', ts: 1 }
+];
+
+// Нормализуем букву помёта: верхний регистр + схлопываем латиницу-двойники в кириллицу,
+// чтобы «H» и «Н» (или «C»/«С», «A»/«А») считались одним помётом и не плодили дубли.
+function normalizeLitterKey(s) {
+  if (!s) return '';
+  const lookalike = { A:'А', B:'В', E:'Е', K:'К', M:'М', H:'Н', O:'О', P:'Р', C:'С', T:'Т', X:'Х', Y:'У' };
+  return s.toString().trim().toUpperCase().replace(/[A-Z]/g, ch => lookalike[ch] || ch);
+}
+
+function ensureLittersSeed() {
+  try {
+    if (!fs.existsSync(LITTERS_DIR)) fs.mkdirSync(LITTERS_DIR, { recursive: true });
+    if (!fs.existsSync(LITTERS_FILE)) fs.writeFileSync(LITTERS_FILE, JSON.stringify({ litters: LITTERS_SEED }, null, 2));
+  } catch (e) { console.error('ensureLittersSeed err:', e.message); }
+}
+
+function readLitters() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(LITTERS_FILE, 'utf8'));
+    return Array.isArray(raw.litters) ? raw.litters : LITTERS_SEED;
+  } catch (e) { return LITTERS_SEED; }
+}
+
+function writeLitters(arr) {
+  try {
+    if (!fs.existsSync(LITTERS_DIR)) fs.mkdirSync(LITTERS_DIR, { recursive: true });
+    fs.writeFileSync(LITTERS_FILE, JSON.stringify({ litters: arr }, null, 2));
+    return true;
+  } catch (e) { console.error('writeLitters err:', e.message); return false; }
+}
+
+// Добавить/обновить помёт с защитой от дублей (по нормализованной букве).
+function upsertLitter(entry) {
+  const key = normalizeLitterKey(entry.key);
+  const arr = readLitters();
+  const i = arr.findIndex(x => normalizeLitterKey(x.key) === key);
+  if (i >= 0) {
+    arr[i] = { ...arr[i], ...entry, key }; // обновляем существующую карточку — НЕ создаём вторую
+  } else {
+    arr.unshift({ ...entry, key }); // новый помёт — первым в списке
+  }
+  writeLitters(arr);
+  return { updated: i >= 0, key };
+}
+
+ensureLittersSeed();
+
+// Отдаём список помётов фронту (раздел «Выпускники» рендерится из него)
+app.get('/api/litters', (req, res) => {
+  res.json({ litters: readLitters() });
+});
+
 app.post('/api/submit', async (req, res) => {
   try {
     const { name, phone, city, extraInfo } = req.body;
@@ -147,6 +213,17 @@ app.post('/api/vk-webhook', async (req, res) => {
           text = text.replace(/#клип|#clip/ig, '').trim();
           console.log("Clip mode enabled via hashtag!");
       }
+
+      // Режим помёта: «#помёт Н» → добавит/обновит карточку в разделе «Выпускники» на сайте
+      let isLitter = false;
+      let litterLetterRaw = null;
+      const litterMatch = text.match(/#пом[её]т\b[\s:"«»]*([A-Za-zА-Яа-яЁё]{1,4})/i);
+      if (litterMatch) {
+          isLitter = true;
+          litterLetterRaw = litterMatch[1];
+          text = text.replace(/#пом[её]т\b/ig, '').trim();
+          console.log("Litter mode enabled via hashtag! Letter:", litterLetterRaw);
+      }
       
       const prompt = `Ты — профессиональный SMM-маркетолог элитного питомника мейн-кунов. 
 Тебе дали сырые факты о котенке: "${text}".
@@ -238,6 +315,17 @@ app.post('/api/vk-webhook', async (req, res) => {
         for (const att of attachments) {
           extractMedia(att);
         }
+      }
+
+      // Если это помёт — добавляем/обновляем карточку в разделе «Выпускники» (с защитой от дублей)
+      if (isLitter && photoUrls.length > 0) {
+        try {
+          const key = normalizeLitterKey(litterLetterRaw);
+          const dateMatch = text.match(/(\d{2}\.\d{2}\.\d{4})/);
+          const meta = dateMatch ? `Котятки · рождены ${dateMatch[1]}` : 'Котятки';
+          const r = upsertLitter({ key, name: `Помёт «${key}»`, meta, img: photoUrls[0], ts: Date.now() });
+          console.log(`Litter "${key}" ${r.updated ? 'обновлён' : 'добавлен'} в раздел «Выпускники».`);
+        } catch (e) { console.error('Litter upsert err:', e.message); }
       }
 
       // СОЗДАНИЕ ТОВАРА В МАРКЕТЕ С КАРОУСЕЛЬЮ ФОТО
