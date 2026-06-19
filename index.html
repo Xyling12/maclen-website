@@ -81,7 +81,12 @@
     "mainEntity": [
       { "@type": "Question", "name": "Есть ли документы и родословная WCF?", "acceptedAnswer": { "@type": "Answer", "text": "Да, все котята передаются с полным пакетом документов: родословная WCF, ветеринарный паспорт с прививками, договор купли-продажи и акт передачи." } },
       { "@type": "Question", "name": "В каком возрасте отдаёте котят?", "acceptedAnswer": { "@type": "Answer", "text": "Котята переезжают в новый дом не ранее 3 месяцев — после полного курса вакцинации, социализации и приучения к лотку." } },
-      { "@type": "Question", "name": "Возможна ли доставка по России?", "acceptedAnswer": { "@type": "Answer", "text": "Да, доставляем котят по всей России. Транспортировка организуется через специализированные зоотакси или ЖД/авиаперевозки в сопровождении." } }
+      { "@type": "Question", "name": "Возможна ли доставка по России?", "acceptedAnswer": { "@type": "Answer", "text": "Да, доставляем котят по всей России. Транспортировка организуется через специализированные зоотакси или ЖД/авиаперевозки в сопровождении." } },
+      { "@type": "Question", "name": "Сколько стоит котёнок мейн-кун?", "acceptedAnswer": { "@type": "Answer", "text": "Цена зависит от класса (домашний любимец, разведение или шоу), окраса и пола. Актуальные цены указаны в описании каждого котёнка в разделе «Котята»." } },
+      { "@type": "Question", "name": "Какого размера и веса вырастает мейн-кун?", "acceptedAnswer": { "@type": "Answer", "text": "Это самая крупная порода домашних кошек. Коты вырастают до 6–10 кг, кошки — 4–7 кг, длина с хвостом до метра. Окончательного размера достигают к 3–4 годам." } },
+      { "@type": "Question", "name": "Чем кормить мейн-куна?", "acceptedAnswer": { "@type": "Answer", "text": "Подойдёт качественный корм премиум/супер-премиум класса или сбалансированный натуральный рацион с высоким содержанием белка. При передаче котёнка даём рекомендации по питанию." } },
+      { "@type": "Question", "name": "Уживётся ли мейн-кун с детьми и другими животными?", "acceptedAnswer": { "@type": "Answer", "text": "Да. Мейн-куны — добрые и неагрессивные кошки-компаньоны, прекрасно ладят с детьми, другими кошками и собаками." } },
+      { "@type": "Question", "name": "Приучен ли котёнок к лотку и когтеточке?", "acceptedAnswer": { "@type": "Answer", "text": "Да, к переезду котёнок приучен к лотку и когтеточке, социализирован и привык к домашним звукам." } }
     ]
   }
   </script>
@@ -122,10 +127,10 @@
     <ul class="nav__links">
       <li><a href="#about">Питомник</a></li>
       <li><a href="#kittens">Котята</a></li>
+      <li><a href="/poroda-mejn-kun/">О породе</a></li>
+      <li><a href="/okrasy/">Окрасы</a></li>
       <li><a href="#parents">Производители</a></li>
-      <li><a href="#alumni">Выпускники</a></li>
       <li><a href="#blog">Блог</a></li>
-      <li><a href="#reviews">Отзывы</a></li>
       <li><a href="#faq">FAQ</a></li>
       <li><a href="#contacts">Заявка</a></li>
     </ul>
@@ -145,6 +150,8 @@
   <span class="mobile-nav-close" id="navClose">✕</span>
   <a href="#about" class="nav-mob-link">Питомник</a>
   <a href="#kittens" class="nav-mob-link">Котята</a>
+  <a href="/poroda-mejn-kun/" class="nav-mob-link">О породе</a>
+  <a href="/okrasy/" class="nav-mob-link">Окрасы</a>
   <a href="#parents" class="nav-mob-link">Производители</a>
   <a href="#alumni" class="nav-mob-link">Выпускники</a>
   <a href="#blog" class="nav-mob-link">Блог</a>
@@ -652,6 +659,26 @@
         <button class="faq__question">Прошли ли родители генетические тесты?<span class="faq__icon">+</span></button>
         <div class="faq__answer"><div class="faq__answer-inner">Да, все наши производители протестированы на основные породные генетические заболевания (HCM, SMA, PKD) и имеют подтвержденный результат N/N — генетически здоровы.</div></div>
       </div>
+      <div class="faq__item">
+        <button class="faq__question">Сколько стоит котёнок мейн-кун?<span class="faq__icon">+</span></button>
+        <div class="faq__answer"><div class="faq__answer-inner">Цена зависит от класса (домашний любимец, разведение или шоу), окраса и пола. Актуальные цены указаны в описании каждого котёнка в разделе «Котята» — напишите нам в WhatsApp или Max, и мы подберём малыша под ваш бюджет.</div></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__question">Какого размера и веса вырастает мейн-кун?<span class="faq__icon">+</span></button>
+        <div class="faq__answer"><div class="faq__answer-inner">Это самая крупная порода домашних кошек. Коты вырастают до 6–10 кг, кошки — 4–7 кг, длина с хвостом может достигать метра. Окончательного размера мейн-куны достигают к 3–4 годам. Подробнее — на странице <a href="/poroda-mejn-kun/">о породе мейн-кун</a>.</div></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__question">Чем кормить мейн-куна?<span class="faq__icon">+</span></button>
+        <div class="faq__answer"><div class="faq__answer-inner">Подойдёт качественный корм премиум/супер-премиум класса или сбалансированный натуральный рацион с высоким содержанием белка. При передаче котёнка мы даём подробные рекомендации по питанию и привычному корму.</div></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__question">Уживётся ли мейн-кун с детьми и другими животными?<span class="faq__icon">+</span></button>
+        <div class="faq__answer"><div class="faq__answer-inner">Да! Мейн-куны — добрые и неагрессивные кошки-компаньоны. Они прекрасно ладят с детьми, другими кошками и собаками, не мстительны и легко становятся частью семьи.</div></div>
+      </div>
+      <div class="faq__item">
+        <button class="faq__question">Приучен ли котёнок к лотку и когтеточке?<span class="faq__icon">+</span></button>
+        <div class="faq__answer"><div class="faq__answer-inner">Да, к переезду котёнок уже приучен к лотку и когтеточке, социализирован и привык к домашним звукам. Мы подскажем, какие наполнитель и когтеточку он использовал, чтобы переход прошёл мягко.</div></div>
+      </div>
     </div>
   </div>
 </section>
@@ -769,6 +796,8 @@
         <ul class="footer__links">
           <li><a href="#about">О питомнике</a></li>
           <li><a href="#kittens">Котята</a></li>
+          <li><a href="/poroda-mejn-kun/">О породе мейн-кун</a></li>
+          <li><a href="/okrasy/">Окрасы мейн-кунов</a></li>
           <li><a href="#parents">Производители</a></li>
           <li><a href="#faq">Вопросы и ответы</a></li>
           <li><a href="#blog">Блог</a></li>

@@ -100,6 +100,14 @@ section { padding: 5rem 0; }
   background: var(--green-bg);
   transform: translateY(-2px);
 }
+.btn-light {
+  background: #fff;
+  color: var(--green-dark, #2e5d3c);
+}
+.btn-light:hover {
+  background: rgba(255,255,255,.9);
+  transform: translateY(-2px);
+}
 .btn-sand {
   background: var(--sand);
   color: var(--green-dark);
