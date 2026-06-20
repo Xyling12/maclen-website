@@ -1,4 +1,5 @@
 .vercel
+node_modules/
 data/
 _*.js
 clip_*.mp4

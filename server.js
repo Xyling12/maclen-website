@@ -708,8 +708,12 @@ app.get('/api/market', async (req, res) => {
   }
 });
 
+const _wallCache = { t: 0, data: null };
 app.get('/api/wall', async (req, res) => {
   try {
+    if (_wallCache.data && Date.now() - _wallCache.t < ALBUMS_CACHE_MS) {
+      return res.status(200).json(_wallCache.data);
+    }
     const USER_TOKEN = process.env.VK_USER_TOKEN;
     if (!USER_TOKEN) {
       console.error('Missing VK_USER_TOKEN environment variable');
@@ -719,21 +723,36 @@ app.get('/api/wall', async (req, res) => {
     const query = new URLSearchParams({
       owner_id: '-225204095',
       count: '15',
-      extended: '1',
       access_token: USER_TOKEN,
       v: VK_API_V
     });
 
     const url = `https://api.vk.com/method/wall.get?${query}`;
-    const vkRes = await fetch(url);
-    const vkData = await vkRes.json();
-    
+    const vkData = await (await fetch(url)).json();
+
     if (vkData.error) {
       console.error('VK Wall Error:', vkData.error);
       return res.status(500).json({ error: 'Failed to fetch wall from VK' });
     }
 
-    return res.status(200).json(vkData.response);
+    // Отдаём только то, что нужно блогу (текст, дата, закреп, фото/видео) —
+    // вместо «сырого» ответа VK (лайки, репосты, профили и пр.). Сильно легче.
+    const items = (vkData.response.items || []).map(p => {
+      const attachments = [];
+      for (const a of (p.attachments || [])) {
+        if (a.type === 'photo' && a.photo) {
+          attachments.push({ type: 'photo', photo: { sizes: a.photo.sizes } });
+        } else if (a.type === 'video' && a.video) {
+          attachments.push({ type: 'video', video: { image: a.video.image, owner_id: a.video.owner_id, id: a.video.id } });
+        }
+      }
+      return { id: p.id, date: p.date, text: p.text || '', is_pinned: p.is_pinned || 0, attachments };
+    });
+
+    const payload = { count: vkData.response.count, items };
+    _wallCache.data = payload;
+    _wallCache.t = Date.now();
+    return res.status(200).json(payload);
   } catch (error) {
     console.error('Wall API Error:', error);
     return res.status(500).json({ error: 'Internal server error' });

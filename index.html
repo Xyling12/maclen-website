@@ -277,7 +277,7 @@
 
       <div class="about__photos fade-up">
         <div class="about__photo-main img-reveal blur-reveal">
-          <img src="/images/cattery_new.jpg" alt="Елена Матросова — заводчик питомника Maclen Ижевск" loading="lazy" width="400" height="500">
+          <img src="/images/cattery_new.webp" alt="Елена Матросова — заводчик питомника Maclen Ижевск" loading="lazy" width="400" height="500">
         </div>
         <div class="about__photo-badge">
           <div class="num">с 2022</div>
@@ -467,46 +467,11 @@
       <p class="section-subtitle">Посмотрите, какими роскошными вырастают котята Maclen!</p>
     </div>
     <div class="alumni__grid fade-up" id="alumniGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-
-      <div class="parent-card">
-        <div class="parent-card__img img-reveal">
-          <img src="/images/litter_h.jpg" alt="Помёт Н" loading="lazy">
-        </div>
-        <div class="parent-card__body">
-          <div class="parent-card__name display">Помёт «Н»</div>
-          <div class="parent-card__meta">Котятки · рождены 05.05.2026</div>
-        </div>
-      </div>
-
-      <div class="parent-card">
-        <div class="parent-card__img img-reveal">
-          <img src="/images/litter_a.jpg" alt="Первый помёт А" loading="lazy">
-        </div>
-        <div class="parent-card__body">
-          <div class="parent-card__name display">Первый помёт «А»</div>
-          <div class="parent-card__meta">Помёт «А»</div>
-        </div>
-      </div>
-
-      <div class="parent-card">
-        <div class="parent-card__img img-reveal">
-          <img src="/images/litter_c1.jpg" alt="Помёт С" loading="lazy">
-        </div>
-        <div class="parent-card__body">
-          <div class="parent-card__name display">Помёт «С»</div>
-          <div class="parent-card__meta">Котята · ~3 месяца</div>
-        </div>
-      </div>
-
-      <div class="parent-card">
-        <div class="parent-card__img img-reveal">
-          <img src="/images/litter_efg.jpg" alt="Помёты E, F, G" loading="lazy">
-        </div>
-        <div class="parent-card__body">
-          <div class="parent-card__name display">Помёты «E», «F», «G»</div>
-          <div class="parent-card__meta">Большая семья</div>
-        </div>
-      </div>
+      <!-- Помёты подгружаются из фотоальбомов VK через /api/litters (js/main.js).
+           Лёгкие скелетоны-заглушки на время загрузки (без тяжёлых картинок). -->
+      <div class="parent-card"><div class="parent-card__img" style="background:var(--sand-light);aspect-ratio:1/1"></div><div class="parent-card__body"><div class="parent-card__name display">Загрузка…</div></div></div>
+      <div class="parent-card"><div class="parent-card__img" style="background:var(--sand-light);aspect-ratio:1/1"></div><div class="parent-card__body"><div class="parent-card__name display">Загрузка…</div></div></div>
+      <div class="parent-card"><div class="parent-card__img" style="background:var(--sand-light);aspect-ratio:1/1"></div><div class="parent-card__body"><div class="parent-card__name display">Загрузка…</div></div></div>
 
     </div>
   </div>
